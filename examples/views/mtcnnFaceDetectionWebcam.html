@@ -72,8 +72,8 @@
 
   <script>
     let modelLoaded = false
-    let minFaceSize = 250
-    let minConfidence = 0.9
+    let minFaceSize = 150
+    let minConfidence = 0.85
     let forwardTimes = []
 
     let drawLines = false
@@ -116,7 +116,8 @@
       canvas.width = width
       canvas.height = height
      
-      
+      /* Landmark only */
+      /*
       landmarks = await faceapi.detectLandmarks(videoEl)  
       
       faceapi.drawLandmarks(canvas, landmarks, { lineWidth: drawLines ? 2 : 4, drawLines })
@@ -135,21 +136,54 @@
       $('#up').css('background-color', bgColor)
       $('#down').val(textD)
       $('#down').css('background-color', bgColor)
-      
-      /*
-      const { width, height } = faceapi.getMediaDimensions(videoEl)
-      const canvas = $('#overlay').get(0)
-      canvas.width = width
-      canvas.height = height
       */
-      /*
+
+      
       const mtcnnParams = {
         minFaceSize
       }
 
       const { results, stats } = await faceapi.nets.mtcnn.forwardWithStats(videoEl, mtcnnParams)
       updateTimeStats(stats.total)
+      /*****************************************************************************************************************************************/
+      locations = []
+      flen = results.length
+      for (i = 0; i<flen; i++)
+      {locations.push(results[i].faceDetection)}
+      const faceTensors = (await faceapi.extractFaceTensors(videoEl, locations))
+      let landmarksByFace = await Promise.all(faceTensors.map(t => faceapi.detectLandmarks(t)))
+      
 
+      // free memory for face image tensors after we computed their descriptors
+      faceTensors.forEach(t => t.dispose())
+
+      // shift and scale the face landmarks to the face image position in the canvas
+      landmarksByFace = landmarksByFace.map((landmarks, i) => {
+        const box = locations[i].forSize(width, height).getBox()
+        return landmarks.forSize(box.width, box.height).shift(box.x, box.y)
+      })
+      
+      console.log(landmarksByFace)
+      if(landmarksByFace.length!=0)
+      {
+      lmkPos = landmarksByFace[0].getMouth()
+      let textU = Math.round(lmkPos[14].x*100)/100+" "+Math.round(lmkPos[14].y*100)/100
+      let textD = Math.round(lmkPos[18].x*100)/100+" "+Math.round(lmkPos[18].y*100)/100
+      let textL = Math.round(lmkPos[12].x*100)/100+" "+Math.round(lmkPos[12].y*100)/100
+      let textR = Math.round(lmkPos[16].x*100)/100+" "+Math.round(lmkPos[16].y*100)/100
+      let bgColor = '#ffffff'
+      $('#left').val(textL)
+      $('#left').css('background-color', bgColor)
+      $('#right').val(textR)
+      $('#right').css('background-color', bgColor)
+      $('#up').val(textU)
+      $('#up').css('background-color', bgColor)
+      $('#down').val(textD)
+      $('#down').css('background-color', bgColor)
+      let drawLines = false
+      faceapi.drawLandmarks(canvas, landmarksByFace, { lineWidth: drawLines ? 2 : 4, drawLines, color: 'blue' })
+      }
+      /***************************************************************************************************************************************/
       if (results) {
         results.forEach(({ faceDetection, faceLandmarks }) => {
           if (faceDetection.score < minConfidence) {
@@ -159,7 +193,7 @@
           //faceapi.drawLandmarks('overlay', faceLandmarks.forSize(width, height), { lineWidth: 4, color: 'red' })
         })
       }
-      */
+      
       setTimeout(() => onPlay(videoEl))
     }
 
@@ -168,8 +202,6 @@
       //modelLoaded = true
       await faceapi.loadFaceLandmarkModel('/')
       modelLoaded = true
-      //$('#loader').hide()
-      //await onSelectionChanged($('#selectList select').val())
     
 
       const videoEl = $('#inputVideo').get(0)
