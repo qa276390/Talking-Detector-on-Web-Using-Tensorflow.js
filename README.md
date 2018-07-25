@@ -20,7 +20,7 @@ Check out my article **[face-api.js — JavaScript API for Face Recognition 
   * **[68 Point Face Landmark Detection](#usage-face-landmark-detection)**
   * **[Full Face Detection and Recognition Pipeline](#usage-full-face-detection-and-recognition-pipeline)**
 
-## Examples
+## Examples!
 
 ### Face Recognition
 
