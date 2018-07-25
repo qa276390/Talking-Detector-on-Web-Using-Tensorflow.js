@@ -72,13 +72,17 @@
 
   <script>
     let modelLoaded = false
-    let minFaceSize = 200
+    let minFaceSize = 250
     let minConfidence = 0.9
     let forwardTimes = []
 
     let drawLines = false
     let landmarks
     let currentImg
+    navigator.getUserMedia = ( navigator.getUserMedia ||
+                       navigator.webkitGetUserMedia ||
+                       navigator.mozGetUserMedia ||
+                       navigator.msGetUserMedia);
 
     function onIncreaseMinFaceSize() {
       minFaceSize = Math.min(faceapi.round(minFaceSize + 50), 300)
@@ -111,18 +115,13 @@
       const canvas = $('#overlay').get(0)
       canvas.width = width
       canvas.height = height
-
-      //currentImg = await faceapi.bufferToImage(videoEl)
-      landmarks = await faceapi.detectLandmarks(videoEl)
-      lmkPos = landmarks.getMouth()
+     
       
-      //$('#faceContainer').empty()
-      //$('#faceContainer').append(canvas)
+      landmarks = await faceapi.detectLandmarks(videoEl)  
+      
       faceapi.drawLandmarks(canvas, landmarks, { lineWidth: drawLines ? 2 : 4, drawLines })
-      console.log('---------------------------')
-      console.log(lmkPos[12].x+" "+lmkPos[12].y)
-      console.log(lmkPos[16].x+" "+lmkPos[16].y)
-      console.log('---------------------------')
+      
+      lmkPos = landmarks.getMouth()
       let textU = Math.round(lmkPos[14].x*100)/100+" "+Math.round(lmkPos[14].y*100)/100
       let textD = Math.round(lmkPos[18].x*100)/100+" "+Math.round(lmkPos[18].y*100)/100
       let textL = Math.round(lmkPos[12].x*100)/100+" "+Math.round(lmkPos[12].y*100)/100
@@ -137,12 +136,13 @@
       $('#down').val(textD)
       $('#down').css('background-color', bgColor)
       
-/*
+      /*
       const { width, height } = faceapi.getMediaDimensions(videoEl)
       const canvas = $('#overlay').get(0)
       canvas.width = width
       canvas.height = height
-
+      */
+      /*
       const mtcnnParams = {
         minFaceSize
       }
@@ -156,17 +156,16 @@
             return
           }
           faceapi.drawDetection('overlay', faceDetection.forSize(width, height))
-          faceapi.drawLandmarks('overlay', faceLandmarks.forSize(width, height), { lineWidth: 4, color: 'red' })
+          //faceapi.drawLandmarks('overlay', faceLandmarks.forSize(width, height), { lineWidth: 4, color: 'red' })
         })
       }
-*/
+      */
       setTimeout(() => onPlay(videoEl))
     }
 
     async function run() {
-      //await faceapi.loadMtcnnModel('/')
+      await faceapi.loadMtcnnModel('/')
       //modelLoaded = true
-     
       await faceapi.loadFaceLandmarkModel('/')
       modelLoaded = true
       //$('#loader').hide()
