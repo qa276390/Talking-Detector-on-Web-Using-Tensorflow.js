@@ -39,31 +39,27 @@ export async function extractFaceTensors(
         ? det.forSize(imgWidth, imgHeight).getBox().floor()
         : det
     )
-    console.log('imgTensor')
-    console.log(imgTensor)
-    console.log('boxes')
-    console.log(boxes)
+    //console.log('imgTensor')
+    //console.log(imgTensor)
+    //console.log('boxes')
+    //console.log(boxes)
     let newimgTensor = imgTensor
     
-    if(boxes.length>0){
-      const dx = (boxes[0].x + boxes[0].width)-imgWidth
-      const dy = (boxes[0].y + boxes[0].height)-imgHeight
-      if(dx>0){
-        newimgTensor = newimgTensor.pad([[0,0],[0,0],[dx,dx],[0,0]])
-        console.log('dx Box to big!')
-      }
-      if(dy>0){
-        newimgTensor = newimgTensor.pad([[0,0],[dy,dy],[0,0],[0,0]])
-        console.log('dy Box to big!')
+    if(boxes.length > 0){
+      const dx = ((boxes[0].x + boxes[0].width)-imgWidth > 0) ? ((boxes[0].x + boxes[0].width)-imgWidth) : 0
+      const dy = ((boxes[0].y + boxes[0].height)-imgHeight > 0) ? ((boxes[0].y + boxes[0].height)-imgHeight) : 0
+      if(dx > 0 || dy > 0){
+        newimgTensor = newimgTensor.pad([[0,0],[dy,dy],[dx,dx],[0,0]])
+        //console.log('Box to big!')
       }
     }
-    console.log('paded newimgTensor')
-    console.log(newimgTensor)
+    //console.log('paded newimgTensor')
+    //console.log(newimgTensor)
       const faceTensors = boxes.map(({ x, y, width, height }) =>
       tf.slice(newimgTensor, [0, y, x, 0], [1, height, width, numChannels])
     )
-    console.log('faceTensors')
-    console.log(faceTensors)
+    //console.log('faceTensors')
+    //console.log(faceTensors)
     
     if (netInput.isManaged) {
       netInput.dispose()
