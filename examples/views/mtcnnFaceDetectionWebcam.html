@@ -30,6 +30,10 @@
         <input disabled value="-" id="left" type="text" class="bold">
       </div>
       <div class="row">
+        <label for="mouthRatio">Mouth Ratio:</label>
+        <input disabled value="-" id="mouthRatio" type="text" class="bold">
+      </div>
+      <div class="row">
         <label for="right">Right:</label>
         <input disabled value="-" id="right" type="text" class="bold">
       </div>
@@ -75,6 +79,7 @@
     let minFaceSize = 150
     let minConfidence = 0.85
     let forwardTimes = []
+    let stop = false
 
     let drawLines = false
     let landmarks
@@ -109,42 +114,27 @@
 
        
 
-    
+      console.log('In*************')
       //const imgBuf = await fetchImage(uri)
       const { width, height } = faceapi.getMediaDimensions(videoEl)
       const canvas = $('#overlay').get(0)
       canvas.width = width
       canvas.height = height
      
-      /* Landmark only */
-      /*
-      landmarks = await faceapi.detectLandmarks(videoEl)  
-      
-      faceapi.drawLandmarks(canvas, landmarks, { lineWidth: drawLines ? 2 : 4, drawLines })
-      
-      lmkPos = landmarks.getMouth()
-      let textU = Math.round(lmkPos[14].x*100)/100+" "+Math.round(lmkPos[14].y*100)/100
-      let textD = Math.round(lmkPos[18].x*100)/100+" "+Math.round(lmkPos[18].y*100)/100
-      let textL = Math.round(lmkPos[12].x*100)/100+" "+Math.round(lmkPos[12].y*100)/100
-      let textR = Math.round(lmkPos[16].x*100)/100+" "+Math.round(lmkPos[16].y*100)/100
-      let bgColor = '#ffffff'
-      $('#left').val(textL)
-      $('#left').css('background-color', bgColor)
-      $('#right').val(textR)
-      $('#right').css('background-color', bgColor)
-      $('#up').val(textU)
-      $('#up').css('background-color', bgColor)
-      $('#down').val(textD)
-      $('#down').css('background-color', bgColor)
-      */
-
       
       const mtcnnParams = {
         minFaceSize
       }
 
-      const { results, stats } = await faceapi.nets.mtcnn.forwardWithStats(videoEl, mtcnnParams)
-      updateTimeStats(stats.total)
+      //const { results, stats } = await faceapi.nets.mtcnn.forwardWithStats(videoEl, mtcnnParams)
+      const results = await faceapi.mtcnn(videoEl, mtcnnParams)
+      //const results = await faceapi.nets.mtcnn.forward(videoEl, mtcnnParams)
+      console.log(results)
+      console.log('videoEl:')
+      console.log(videoEl)
+      //console.log(stats)
+
+      //updateTimeStats(stats.total)
       /*****************************************************************************************************************************************/
       locations = []
       flen = results.length
@@ -152,7 +142,7 @@
       {locations.push(results[i].faceDetection)}
       const faceTensors = (await faceapi.extractFaceTensors(videoEl, locations))
       let landmarksByFace = await Promise.all(faceTensors.map(t => faceapi.detectLandmarks(t)))
-      
+      //console.log(landmarksByFace)
 
       // free memory for face image tensors after we computed their descriptors
       faceTensors.forEach(t => t.dispose())
@@ -163,7 +153,7 @@
         return landmarks.forSize(box.width, box.height).shift(box.x, box.y)
       })
       
-      console.log(landmarksByFace)
+      //console.log(landmarksByFace)
       if(landmarksByFace.length!=0)
       {
       lmkPos = landmarksByFace[0].getMouth()
@@ -171,6 +161,11 @@
       let textD = Math.round(lmkPos[18].x*100)/100+" "+Math.round(lmkPos[18].y*100)/100
       let textL = Math.round(lmkPos[12].x*100)/100+" "+Math.round(lmkPos[12].y*100)/100
       let textR = Math.round(lmkPos[16].x*100)/100+" "+Math.round(lmkPos[16].y*100)/100
+      let Ratio = (Math.pow((lmkPos[14].x - lmkPos[18].x),2) + Math.pow((lmkPos[14].y - lmkPos[18].y),2))/locations[0].box.height
+      let LipsRatio = (Math.pow((lmkPos[3].x - lmkPos[9].x),2) + Math.pow((lmkPos[3].y - lmkPos[9].y),2))/locations[0].box.height
+      console.log(Ratio)
+      console.log(LipsRatio)
+      let textRatio = Math.round(Ratio*100)/100+"%"
       let bgColor = '#ffffff'
       $('#left').val(textL)
       $('#left').css('background-color', bgColor)
@@ -180,6 +175,8 @@
       $('#up').css('background-color', bgColor)
       $('#down').val(textD)
       $('#down').css('background-color', bgColor)
+      $('#mouthRatio').val(textRatio)
+      $('#mouthRatio').css('background-color', bgColor)
       let drawLines = false
       faceapi.drawLandmarks(canvas, landmarksByFace, { lineWidth: drawLines ? 2 : 4, drawLines, color: 'blue' })
       }
@@ -193,7 +190,9 @@
           //faceapi.drawLandmarks('overlay', faceLandmarks.forSize(width, height), { lineWidth: 4, color: 'red' })
         })
       }
-      
+      console.log('Out-------------')
+      if(stop)
+        return false
       setTimeout(() => onPlay(videoEl))
     }
 
