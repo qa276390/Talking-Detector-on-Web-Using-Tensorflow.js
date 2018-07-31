@@ -44,10 +44,17 @@ export async function extractFaceTensors(
     //console.log('boxes')
     //console.log(boxes)
     let newimgTensor = imgTensor
-    
+    let dx = 0, dy = 0, tmpx = 0, tmpy = 0
     if(boxes.length > 0){
-      const dx = ((boxes[0].x + boxes[0].width)-imgWidth > 0) ? ((boxes[0].x + boxes[0].width)-imgWidth) : 0
-      const dy = ((boxes[0].y + boxes[0].height)-imgHeight > 0) ? ((boxes[0].y + boxes[0].height)-imgHeight) : 0
+      for(var i = 0; i< boxes.length;i++)
+      {
+        tmpx = ((boxes[i].x + boxes[i].width)-imgWidth > 0) ? ((boxes[i].x + boxes[i].width)-imgWidth) : 0
+        tmpy = ((boxes[i].y + boxes[i].height)-imgHeight > 0) ? ((boxes[i].y + boxes[i].height)-imgHeight) : 0
+        if(tmpx>dx)
+          dx = tmpx
+        if(tmpy>dy)
+          dy = tmpy
+      }
       if(dx > 0 || dy > 0){
         newimgTensor = newimgTensor.pad([[0,0],[dy,dy],[dx,dx],[0,0]])
         //console.log('Box to big!')
