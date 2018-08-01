@@ -65,6 +65,8 @@ var Mtcnn = /** @class */ (function (_super) {
                     case 1:
                         out1 = _c.sent();
                         stats.total_stage1 = Date.now() - ts;
+                        //console.log("out1:")
+                        //console.log(out1)
                         if (!out1.boxes.length) {
                             return [2 /*return*/, onReturn({ results: [], stats: stats })];
                         }
@@ -76,6 +78,9 @@ var Mtcnn = /** @class */ (function (_super) {
                     case 2:
                         out2 = _c.sent();
                         stats.total_stage2 = Date.now() - ts;
+                        //console.log("out2:")
+                        //console.log(out2)
+                        //console.log(scoreThresholds[1])
                         if (!out2.boxes.length) {
                             return [2 /*return*/, onReturn({ results: [], stats: stats })];
                         }
@@ -92,6 +97,8 @@ var Mtcnn = /** @class */ (function (_super) {
                             }),
                             faceLandmarks: new FaceLandmarks5_1.FaceLandmarks5(out3.points[idx].map(function (pt) { return pt.div(new Point_1.Point(width, height)); }), { width: width, height: height })
                         }); });
+                        //console.log("results:")
+                        //console.log(results)
                         return [2 /*return*/, onReturn({ results: results, stats: stats })];
                 }
             });

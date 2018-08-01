@@ -20,9 +20,13 @@ export async function toNetInput(
   manageCreatedInput: boolean = false,
   keepCanvases: boolean = false
 ): Promise<NetInput> {
+  //console.log('toNetinput')
+  //console.log(inputs)
   if (inputs instanceof NetInput) {
     return inputs
   }
+
+ 
 
   const afterCreate = (netInput: NetInput) => manageCreatedInput
     ? netInput.managed()

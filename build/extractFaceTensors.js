@@ -34,10 +34,34 @@ function extractFaceTensors(input, detections) {
                             var boxes = detections.map(function (det) { return det instanceof FaceDetection_1.FaceDetection
                                 ? det.forSize(imgWidth, imgHeight).getBox().floor()
                                 : det; });
+                            //console.log('imgTensor')
+                            //console.log(imgTensor)
+                            //console.log('boxes')
+                            //console.log(boxes)
+                            var newimgTensor = imgTensor;
+                            var dx = 0, dy = 0, tmpx = 0, tmpy = 0;
+                            if (boxes.length > 0) {
+                                for (var i = 0; i < boxes.length; i++) {
+                                    tmpx = ((boxes[i].x + boxes[i].width) - imgWidth > 0) ? ((boxes[i].x + boxes[i].width) - imgWidth) : 0;
+                                    tmpy = ((boxes[i].y + boxes[i].height) - imgHeight > 0) ? ((boxes[i].y + boxes[i].height) - imgHeight) : 0;
+                                    if (tmpx > dx)
+                                        dx = tmpx;
+                                    if (tmpy > dy)
+                                        dy = tmpy;
+                                }
+                                if (dx > 0 || dy > 0) {
+                                    newimgTensor = newimgTensor.pad([[0, 0], [dy, dy], [dx, dx], [0, 0]]);
+                                    //console.log('Box to big!')
+                                }
+                            }
+                            //console.log('paded newimgTensor')
+                            //console.log(newimgTensor)
                             var faceTensors = boxes.map(function (_a) {
                                 var x = _a.x, y = _a.y, width = _a.width, height = _a.height;
-                                return tf.slice(imgTensor, [0, y, x, 0], [1, height, width, numChannels]);
+                                return tf.slice(newimgTensor, [0, y, x, 0], [1, height, width, numChannels]);
                             });
+                            //console.log('faceTensors')
+                            //console.log(faceTensors)
                             if (netInput.isManaged) {
                                 netInput.dispose();
                             }

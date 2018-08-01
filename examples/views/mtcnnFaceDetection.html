@@ -91,7 +91,9 @@
         maxNumScales,
         scoreThresholds: [stage1Threshold, stage2Threshold, stage3Threshold]
       }
-      const results = await faceapi.mtcnn(inputImgEl, mtcnnParams)
+      //const results = await faceapi.mtcnn(inputImgEl, mtcnnParams)
+      let img = faceapi.createCanvasFromMedia(inputImgEl)
+      const results = await faceapi.mtcnn(img, mtcnnParams)
 
       if (results) {
         results.forEach(({ faceDetection, faceLandmarks }) => {

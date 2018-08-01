@@ -19,6 +19,8 @@ var NetInput = /** @class */ (function () {
         if (isTensor_1.isTensor4D(inputs)) {
             this._inputs = tf.unstack(inputs);
         }
+        //console.log('Netinput')
+        // console.log(inputs)
         if (Array.isArray(inputs)) {
             this._inputs = inputs.map(function (input, idx) {
                 if (isTensor_1.isTensor3D(input)) {
@@ -40,6 +42,8 @@ var NetInput = /** @class */ (function () {
                 return tf.fromPixels(canvas);
             });
         }
+        //console.log('_input')
+        //console.log(this._inputs)
         this._isBatchInput = this.batchSize > 1 || isBatchInput;
         this._inputDimensions = this._inputs.map(function (t) { return t.shape; });
     }

@@ -22,6 +22,8 @@ function toNetInput(inputs, manageCreatedInput, keepCanvases) {
         return tslib_1.__generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
+                    //console.log('toNetinput')
+                    //console.log(inputs)
                     if (inputs instanceof NetInput_1.NetInput) {
                         return [2 /*return*/, inputs];
                     }

@@ -23,7 +23,8 @@ export class NetInput {
     if (isTensor4D(inputs)) {
       this._inputs = tf.unstack(inputs as tf.Tensor4D) as tf.Tensor3D[]
     }
-
+    //console.log('Netinput')
+   // console.log(inputs)
     if (Array.isArray(inputs)) {
       this._inputs = inputs.map((input, idx) => {
         if (isTensor3D(input)) {
@@ -48,7 +49,8 @@ export class NetInput {
         return tf.fromPixels(canvas)
       })
     }
-
+    //console.log('_input')
+    //console.log(this._inputs)
     this._isBatchInput = this.batchSize > 1 || isBatchInput
     this._inputDimensions = this._inputs.map(t => t.shape)
   }

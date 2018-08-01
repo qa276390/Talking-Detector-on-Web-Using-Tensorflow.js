@@ -30,7 +30,9 @@ export class Mtcnn extends NeuralNetwork<NetParams> {
     input: NetInput,
     forwardParams: MtcnnForwardParams
   ): Promise<{ results: MtcnnResult[], stats: any }> {
-
+    
+    //console.log("forwardInput")
+    
     const { params } = this
 
     if (!params) {
@@ -53,6 +55,13 @@ export class Mtcnn extends NeuralNetwork<NetParams> {
         tf.expandDims(inputTensor).toFloat() as tf.Tensor4D
       )
     )
+
+     /*
+    console.log("inputTensor:")
+    console.log(inputTensor)
+    console.log("imgTensor:")
+    console.log(imgTensor)
+    */
 
     const onReturn = (results: any) => {
       // dispose tensors on return
@@ -86,6 +95,9 @@ export class Mtcnn extends NeuralNetwork<NetParams> {
     const out1 = await stage1(imgTensor, scales, scoreThresholds[0], params.pnet, stats)
     stats.total_stage1 = Date.now() - ts
 
+    //console.log("out1:")
+    //console.log(out1)
+
     if (!out1.boxes.length) {
       return onReturn({ results: [], stats })
     }
@@ -97,15 +109,23 @@ export class Mtcnn extends NeuralNetwork<NetParams> {
     const out2 = await stage2(inputCanvas, out1.boxes, scoreThresholds[1], params.rnet, stats)
     stats.total_stage2 = Date.now() - ts
 
+    //console.log("out2:")
+    //console.log(out2)
+    //console.log(scoreThresholds[1])
+    
     if (!out2.boxes.length) {
       return onReturn({ results: [], stats })
     }
 
+    
     stats.stage3_numInputBoxes = out2.boxes.length
 
     ts = Date.now()
     const out3 = await stage3(inputCanvas, out2.boxes, scoreThresholds[2], params.onet, stats)
     stats.total_stage3 = Date.now() - ts
+
+    //console.log("out3:")
+    //console.log(out3)
 
     const results = out3.boxes.map((box, idx) => ({
       faceDetection: new FaceDetection(
@@ -126,7 +146,9 @@ export class Mtcnn extends NeuralNetwork<NetParams> {
         { width, height }
       )
     }))
-
+    //console.log("results:")
+    //console.log(results)
+    
     return onReturn({ results, stats })
   }
 

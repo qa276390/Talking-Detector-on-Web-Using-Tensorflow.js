@@ -635,6 +635,8 @@
           if (isTensor4D(inputs)) {
               this._inputs = unstack(inputs);
           }
+          //console.log('Netinput')
+          // console.log(inputs)
           if (Array.isArray(inputs)) {
               this._inputs = inputs.map(function (input, idx) {
                   if (isTensor3D(input)) {
@@ -656,6 +658,8 @@
                   return fromPixels(canvas);
               });
           }
+          //console.log('_input')
+          //console.log(this._inputs)
           this._isBatchInput = this.batchSize > 1 || isBatchInput;
           this._inputDimensions = this._inputs.map(function (t) { return t.shape; });
       }
@@ -910,6 +914,8 @@
           return __generator$1(this, function (_a) {
               switch (_a.label) {
                   case 0:
+                      //console.log('toNetinput')
+                      //console.log(inputs)
                       if (inputs instanceof NetInput) {
                           return [2 /*return*/, inputs];
                       }
@@ -1545,10 +1551,34 @@
                               var boxes = detections.map(function (det) { return det instanceof FaceDetection
                                   ? det.forSize(imgWidth, imgHeight).getBox().floor()
                                   : det; });
+                              //console.log('imgTensor')
+                              //console.log(imgTensor)
+                              //console.log('boxes')
+                              //console.log(boxes)
+                              var newimgTensor = imgTensor;
+                              var dx = 0, dy = 0, tmpx = 0, tmpy = 0;
+                              if (boxes.length > 0) {
+                                  for (var i = 0; i < boxes.length; i++) {
+                                      tmpx = ((boxes[i].x + boxes[i].width) - imgWidth > 0) ? ((boxes[i].x + boxes[i].width) - imgWidth) : 0;
+                                      tmpy = ((boxes[i].y + boxes[i].height) - imgHeight > 0) ? ((boxes[i].y + boxes[i].height) - imgHeight) : 0;
+                                      if (tmpx > dx)
+                                          dx = tmpx;
+                                      if (tmpy > dy)
+                                          dy = tmpy;
+                                  }
+                                  if (dx > 0 || dy > 0) {
+                                      newimgTensor = newimgTensor.pad([[0, 0], [dy, dy], [dx, dx], [0, 0]]);
+                                      //console.log('Box to big!')
+                                  }
+                              }
+                              //console.log('paded newimgTensor')
+                              //console.log(newimgTensor)
                               var faceTensors = boxes.map(function (_a) {
                                   var x = _a.x, y = _a.y, width = _a.width, height = _a.height;
-                                  return slice(imgTensor, [0, y, x, 0], [1, height, width, numChannels]);
+                                  return slice(newimgTensor, [0, y, x, 0], [1, height, width, numChannels]);
                               });
+                              //console.log('faceTensors')
+                              //console.log(faceTensors)
                               if (netInput.isManaged) {
                                   netInput.dispose();
                               }
@@ -3208,6 +3238,8 @@
                       case 1:
                           out1 = _c.sent();
                           stats.total_stage1 = Date.now() - ts;
+                          //console.log("out1:")
+                          //console.log(out1)
                           if (!out1.boxes.length) {
                               return [2 /*return*/, onReturn({ results: [], stats: stats })];
                           }
@@ -3219,6 +3251,9 @@
                       case 2:
                           out2 = _c.sent();
                           stats.total_stage2 = Date.now() - ts;
+                          //console.log("out2:")
+                          //console.log(out2)
+                          //console.log(scoreThresholds[1])
                           if (!out2.boxes.length) {
                               return [2 /*return*/, onReturn({ results: [], stats: stats })];
                           }
@@ -3235,6 +3270,8 @@
                               }),
                               faceLandmarks: new FaceLandmarks5(out3.points[idx].map(function (pt) { return pt.div(new Point(width, height)); }), { width: width, height: height })
                           }); });
+                          //console.log("results:")
+                          //console.log(results)
                           return [2 /*return*/, onReturn({ results: results, stats: stats })];
                   }
               });
