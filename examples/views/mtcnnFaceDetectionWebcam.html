@@ -23,6 +23,7 @@
         <label for="up">Up:</label>
         <input disabled value="-" id="up" type="text" class="bold">
       </div>
+      
     </div>
     <div class="row side-by-side">    
       <div class="row">
@@ -76,10 +77,11 @@
 
   <script>
     let modelLoaded = false
-    let minFaceSize = 150
-    let minConfidence = 0.85
+    //let minFaceSize = 200
+    let minConfidence = 0.75
     let forwardTimes = []
     let stop = false
+    let LipsRatioed = 0
 
     let drawLines = false
     let landmarks
@@ -113,7 +115,7 @@
         return false
 
        
-
+      let start_time = new Date().getTime()
       console.log('In*************')
       //const imgBuf = await fetchImage(uri)
       const { width, height } = faceapi.getMediaDimensions(videoEl)
@@ -123,19 +125,25 @@
      
       
       const mtcnnParams = {
-        minFaceSize
+        maxNumScales: 10,
+        minFaceSize: 50,
+        scoreThresholds: [0.6, 0.7, 0.7],
       }
+      //let img = faceapi.createCanvasFromMedia(videoEl)
 
       //const { results, stats } = await faceapi.nets.mtcnn.forwardWithStats(videoEl, mtcnnParams)
       const results = await faceapi.mtcnn(videoEl, mtcnnParams)
+      //const results = await faceapi.mtcnn('hello', mtcnnParams)
       //const results = await faceapi.nets.mtcnn.forward(videoEl, mtcnnParams)
+      //console.log(width)
       console.log(results)
-      console.log('videoEl:')
-      console.log(videoEl)
-      //console.log(stats)
+      
 
+      let mtcnn_time = new Date().getTime()
+      let lmk68_time = 0
       //updateTimeStats(stats.total)
       /*****************************************************************************************************************************************/
+      if(results.length!=0){
       locations = []
       flen = results.length
       for (i = 0; i<flen; i++)
@@ -152,20 +160,34 @@
         const box = locations[i].forSize(width, height).getBox()
         return landmarks.forSize(box.width, box.height).shift(box.x, box.y)
       })
-      
+      lmk68_time = new Date().getTime()
       //console.log(landmarksByFace)
-      if(landmarksByFace.length!=0)
-      {
+
       lmkPos = landmarksByFace[0].getMouth()
-      let textU = Math.round(lmkPos[14].x*100)/100+" "+Math.round(lmkPos[14].y*100)/100
-      let textD = Math.round(lmkPos[18].x*100)/100+" "+Math.round(lmkPos[18].y*100)/100
-      let textL = Math.round(lmkPos[12].x*100)/100+" "+Math.round(lmkPos[12].y*100)/100
-      let textR = Math.round(lmkPos[16].x*100)/100+" "+Math.round(lmkPos[16].y*100)/100
-      let Ratio = (Math.pow((lmkPos[14].x - lmkPos[18].x),2) + Math.pow((lmkPos[14].y - lmkPos[18].y),2))/locations[0].box.height
-      let LipsRatio = (Math.pow((lmkPos[3].x - lmkPos[9].x),2) + Math.pow((lmkPos[3].y - lmkPos[9].y),2))/locations[0].box.height
-      console.log(Ratio)
+      lmkPosLE = landmarksByFace[0].getLeftEye()
+      lmkPosRE = landmarksByFace[0].getRightEye()
+      lmkPosN = landmarksByFace[0].getNose()
+      let textU = Math.round(lmkPos[3].x*100)/100+" "+Math.round(lmkPos[3].y*100)/100
+      let textD = Math.round(lmkPos[9].x*100)/100+" "+Math.round(lmkPos[9].y*100)/100
+      //let textL = Math.round(lmkPos[0].x*100)/100+" "+Math.round(lmkPos[0].y*100)/100
+      let textL = Math.round(lmkPosN[0].x*100)/100+" "+Math.round(lmkPosN[0].y*100)/100
+      //let textR = Math.round(lmkPos[6].x*100)/100+" "+Math.round(lmkPos[6].y*100)/100
+      let textR = Math.round(lmkPosN[3].x*100)/100+" "+Math.round(lmkPosN[3].y*100)/100
+      
+      let eyed = Math.pow((lmkPosLE[3].x-lmkPosRE[0].x), 2) + Math.pow((lmkPosLE[3].y-lmkPosRE[0].y), 2)
+      let nosed = Math.pow((lmkPosN[3].x-lmkPosN[0].x), 2) + Math.pow((lmkPosN[3].y-lmkPosN[0].y), 2)
+      let avg = (eyed+nosed)/2.0
+      //let Clips = (Math.pow((lmkPos[3].x - lmkPos[9].x),2) + Math.pow((lmkPos[3].y - lmkPos[9].y),2))
+      let Llips = (Math.pow((lmkPos[2].x - lmkPos[10].x),2) + Math.pow((lmkPos[2].y - lmkPos[10].y),2))
+      let Rlips = (Math.pow((lmkPos[4].x - lmkPos[8].x),2) + Math.pow((lmkPos[4].y - lmkPos[8].y),2))
+      let lipsd = (Llips + Rlips )/2.0
+      let LipsRatio = Math.pow(lipsd/avg, 0.5)
+      if(LipsRatio < 0.4 && LipsRatio - LipsRatioed < 0.03)
+        console.log('**************Off***************')
+      LipsRatioed = LipsRatio
+      //console.log(Ratio)
       console.log(LipsRatio)
-      let textRatio = Math.round(Ratio*100)/100+"%"
+      let textRatio = Math.round(LipsRatio*100)+"%"
       let bgColor = '#ffffff'
       $('#left').val(textL)
       $('#left').css('background-color', bgColor)
@@ -179,7 +201,7 @@
       $('#mouthRatio').css('background-color', bgColor)
       let drawLines = false
       faceapi.drawLandmarks(canvas, landmarksByFace, { lineWidth: drawLines ? 2 : 4, drawLines, color: 'blue' })
-      }
+      
       /***************************************************************************************************************************************/
       if (results) {
         results.forEach(({ faceDetection, faceLandmarks }) => {
@@ -190,9 +212,16 @@
           //faceapi.drawLandmarks('overlay', faceLandmarks.forSize(width, height), { lineWidth: 4, color: 'red' })
         })
       }
-      console.log('Out-------------')
+      }
+      let end_time = new Date().getTime();
+      
+      console.log((mtcnn_time - start_time) / 1000 + "sec");
+      console.log((lmk68_time - mtcnn_time) / 1000 + "sec");
+      console.log((end_time - start_time) / 1000 + "sec");
+      console.log('-----------Out-------------')
       if(stop)
         return false
+     
       setTimeout(() => onPlay(videoEl))
     }
 
