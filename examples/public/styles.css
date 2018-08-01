@@ -88,7 +88,7 @@
 .Rec{
   background-color: red;
 	animation-name: pulse;
-	animation-duration: 1.5s;
+	animation-duration: 0.25s;
 	animation-iteration-count: infinite;
 	animation-timing-function: linear;
 }
