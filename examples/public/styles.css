@@ -75,17 +75,18 @@
 	width: 35px;
 	height: 35px;
 	font-size: 0;
-	background-color: red;
+	/*background-color: red;*/
 	border: 0;
 	border-radius: 35px;
 	margin: 18px;
 	outline: none;
 }
 .notRec{
-	background-color: darkred;
+	background-color: rgb(19, 0, 0);
 }
 
 .Rec{
+  background-color: red;
 	animation-name: pulse;
 	animation-duration: 1.5s;
 	animation-iteration-count: infinite;
