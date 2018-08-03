@@ -15,183 +15,444 @@
       <div class="indeterminate"></div>
     </div>
     <div style="position: relative" class="margin">
-      <img id="inputImg" src="" style="max-width: 800px;" />
+      <video onplay="onPlay(this)" id="inputVideo" autoplay muted></video>
       <canvas id="overlay" />
     </div>
-    <div class="row side-by-side">
-      <div id="selectList"></div>
+    <div class="row side-by-side">    
+      
       <div class="row">
-        <label for="imgUrlInput">Get image from URL:</label>
-        <input id="imgUrlInput" type="text" class="bold">
+        <label for="up">Up:</label>
+        <input disabled value="-" id="up" type="text" class="bold">
+      </div>
+      <button id="recButton"></button>
+    </div>
+    <div class="row side-by-side">    
+      <div class="row">
+        <label for="left">Left:</label>
+        <input disabled value="-" id="left" type="text" class="bold">
+      </div>
+      <div class="row">
+        <label for="mouthRatio">Mouth Ratio:</label>
+        <input disabled value="-" id="mouthRatio" type="text" class="bold">
+      </div>
+      <div class="row">
+        <label for="right">Right:</label>
+        <input disabled value="-" id="right" type="text" class="bold">
+      </div>
+    </div>
+    <div class="row side-by-side">    
+      <div class="row">
+        <label for="down">Down:</label>
+        <input disabled value="-" id="down" type="text" class="bold">
+      </div>
+    </div>
+    <div class="row side-by-side">
+      <div class="row">
+        <label for="Threshold">Lips Threshold:</label>
+        <input disabled value="2" id="Threshold" type="text" class="bold">
       </div>
       <button
         class="waves-effect waves-light btn"
-        onclick="loadImageFromUrl()"
+        onclick="onDecreaseThreshold()"
       >
-        Ok
+        <i class="material-icons left">-</i>
+      </button>
+      <button
+        class="waves-effect waves-light btn"
+        onclick="onIncreaseThreshold()"
+      >
+        <i class="material-icons left">+</i>
       </button>
     </div>
-    <div class="row">
-      <div class="row side-by-side">
-        <div class="row">
-          <label for="minFaceSize">Minimum Face Size:</label>
-          <input disabled value="40" id="minFaceSize" type="text" class="bold">
-        </div>
-        <button
-          class="waves-effect waves-light btn"
-          onclick="onDecreaseMinFaceSize()"
-        >
-          <i class="material-icons left">-</i>
-        </button>
-        <button
-          class="waves-effect waves-light btn"
-          onclick="onIncreaseMinFaceSize()"
-        >
-          <i class="material-icons left">+</i>
-        </button>
+    <div class="row side-by-side">
+      <div class="row">
+        <label for="minFaceSize">Minimum Face Size:</label>
+        <input disabled value="200" id="minFaceSize" type="text" class="bold">
       </div>
-      <div class="row side-by-side">
-        <div class="row">
-          <label for="minConfidence">Min Confidence:</label>
-          <input disabled value="0.7" id="minConfidence" type="text" class="bold">
-        </div>
-        <button
-          class="waves-effect waves-light btn button-sm"
-          onclick="onDecreaseMinConfidence()"
-        >
-          <i class="material-icons left">-</i>
-        </button>
-        <button
-          class="waves-effect waves-light btn button-sm"
-          onclick="onIncreaseMinConfidence()"
-        >
-          <i class="material-icons left">+</i>
-        </button>
+      <button
+        class="waves-effect waves-light btn"
+        onclick="onDecreaseMinFaceSize()"
+      >
+        <i class="material-icons left">-</i>
+      </button>
+      <button
+        class="waves-effect waves-light btn"
+        onclick="onIncreaseMinFaceSize()"
+      >
+        <i class="material-icons left">+</i>
+      </button>
+    </div>
+    <div class="row side-by-side">
+      <div class="row">
+        <label for="time">Time:</label>
+        <input disabled value="-" id="time" type="text" class="bold">
       </div>
-      <div class="row side-by-side">
-        <div class="row">
-          <label for="maxDistance">Max Descriptor Distance:</label>
-          <input disabled value="0.6" id="maxDistance" type="text" class="bold">
-        </div>
-        <button
-          class="waves-effect waves-light btn button-sm"
-          onclick="onDecreaseMaxDistance()"
-        >
-          <i class="material-icons left">-</i>
-        </button>
-        <button
-          class="waves-effect waves-light btn button-sm"
-          onclick="onIncreaseMaxDistance()"
-        >
-          <i class="material-icons left">+</i>
-        </button>
+      <div class="row">
+        <label for="fps">Estimated Fps:</label>
+        <input disabled value="-" id="fps" type="text" class="bold">
       </div>
     </div>
   </div>
 
   <script>
-    let maxDistance = 0.6
-    let minConfidence = 0.7
-    let minFaceSize = 40
-    let trainDescriptorsByClass = []
+    
+    let modelLoaded = false
+    let minFaceSize = 50
+    let minConfidence = 0.85
+    let forwardTimes = []
+    let stop = false
+
+    let drawLines = false
+    let landmarks
+    let Q = new Queue();
+    let pointQ = new Queue();
+    let EnQ = new Queue();
+    let thr = 0.03
+    let Vthr = 0.03
+    let oldnPoint = []
+    let Enthr = 2
+
+    navigator.getUserMedia = ( navigator.getUserMedia ||
+                       navigator.webkitGetUserMedia ||
+                       navigator.mozGetUserMedia ||
+                       navigator.msGetUserMedia);
 
     function onIncreaseMinFaceSize() {
-      minFaceSize = Math.min(faceapi.round(minFaceSize + 20), 200)
+      minFaceSize = Math.min(faceapi.round(minFaceSize + 50), 300)
       $('#minFaceSize').val(minFaceSize)
     }
 
     function onDecreaseMinFaceSize() {
-      minFaceSize = Math.max(faceapi.round(minFaceSize - 20), 20)
+      minFaceSize = Math.max(faceapi.round(minFaceSize - 50), 50)
       $('#minFaceSize').val(minFaceSize)
     }
 
-    function onIncreaseMinConfidence() {
-      minConfidence = Math.min(faceapi.round(minConfidence + 0.1), 1.0)
-      $('#minConfidence').val(minConfidence)
-      updateResults()
+    function onIncreaseThreshold() {
+      Enthr= Math.min((Enthr + 0.1), 3.5)
+      //let textT = Math.round(Enthr*100) + '%'
+      let textT = Enthr
+      $('#Threshold').val(textT)
     }
 
-    function onDecreaseMinConfidence() {
-      minConfidence = Math.max(faceapi.round(minConfidence - 0.1), 0.1)
-      $('#minConfidence').val(minConfidence)
-      updateResults()
+    function onDecreaseThreshold() {
+      Enthr= Math.max((Enthr - 0.1), 0.0)
+      //let textT = Math.round(Enthr*100) + '%'
+      let textT = Enthr
+      $('#Threshold').val(textT)
+    }
+    function updateTimeStats(timeInMs) {
+      forwardTimes = [timeInMs].concat(forwardTimes).slice(0, 30)
+      const avgTimeInMs = forwardTimes.reduce((total, t) => total + t) / forwardTimes.length
+      $('#time').val(`${Math.round(avgTimeInMs)} ms`)
+      $('#fps').val(`${faceapi.round(1000 / avgTimeInMs)}`)
+    }
+    
+    function normalizeMouth(landmarksByFace){
+      let lmkMouth = landmarksByFace[0].getMouth()
+      let lmkFace = landmarksByFace[0].getJawOutline()
+      let flen = lmkMouth.length
+      let x3 = lmkFace[2].x
+      let y3 = lmkFace[2].y
+      let tmpx, tmpy = 0
+      let unit = Math.pow(Math.pow(x3-lmkFace[14].x,2)+Math.pow(y3-lmkFace[14].y,2),0.5)
+      let nMouth = []
+   
+
+      for (i = 0; i<flen; i++)
+      {
+          tmpx = (lmkMouth[i].x-x3)/unit
+          tmpy = (lmkMouth[i].y-y3)/unit
+          nMouth.push(new faceapi.Point(tmpx,tmpy))
+      }
+      return nMouth
+    }
+    function calatan2(x, y) {
+      return Math.atan2(y, x) * 180 / Math.PI;
+    }   
+    function calEntropy(Vectors){
+      let statistic = new Array(36)
+      statistic.fill(0)
+      for (i = 0; i<flen; i++)
+      {
+         
+          x = Vectors[i].x
+          y = Vectors[i].y
+          deg = calatan2(x, y)
+          deg = (deg>0)? deg : deg+360
+          console.log(deg)
+          ind = Math.floor(deg/10)
+          console.log(ind)
+          statistic[ind]++
+      }
+      let En = 0
+      let slen = statistic.length
+      for(j = 0;j<slen; j++)
+      {
+        if(statistic[j]!=0)
+          En += ((statistic[j]/flen)*Math.log2(statistic[j]/flen))
+      }
+      En = -En
+      console.log(En)
+      return En
+    }
+    function calculateVectors(p1, p2){
+      let flen = p1.length
+      let Vectors = []
+      let tmpx, tmpy = 0
+      let x, y, u, deg, ind
+      
+      for (i = 0; i<flen; i++)
+      {
+          tmpx = p1[i].x - p2[i].x
+          tmpy = p1[i].y - p2[i].y
+          u = Math.pow(Math.pow(tmpx,2)+Math.pow(tmpy,2),0.5)
+          x = tmpx / u
+          y = tmpy / u
+          Vectors.push(new faceapi.Point(x,y))
+          
+      }
+      return calEntropy(Vectors)
     }
 
-    function onIncreaseMaxDistance() {
-      maxDistance = Math.min(faceapi.round(maxDistance + 0.1), 1.0)
-      $('#maxDistance').val(maxDistance)
-      updateResults()
+    function calculateLipsRatio(landmarksByFace){
+      lmkPos = landmarksByFace[0].getMouth()
+      lmkPosLE = landmarksByFace[0].getLeftEye()
+      lmkPosRE = landmarksByFace[0].getRightEye()
+      lmkPosN = landmarksByFace[0].getNose()
+      let eyed = Math.pow((lmkPosLE[3].x-lmkPosRE[0].x), 2) + Math.pow((lmkPosLE[3].y-lmkPosRE[0].y), 2)
+      let nosed = Math.pow((lmkPosN[3].x-lmkPosN[0].x), 2) + Math.pow((lmkPosN[3].y-lmkPosN[0].y), 2)
+      let avg = (eyed+nosed)/2.0
+      let Llips = (Math.pow((lmkPos[2].x - lmkPos[10].x),2) + Math.pow((lmkPos[2].y - lmkPos[10].y),2))
+      let Rlips = (Math.pow((lmkPos[4].x - lmkPos[8].x),2) + Math.pow((lmkPos[4].y - lmkPos[8].y),2))
+      let lipsd = (Llips + Rlips )/2.0
+      let LipsRatio = Math.pow(lipsd/avg, 0.5)
+      return LipsRatio
     }
 
-    function onDecreaseMaxDistance() {
-      maxDistance = Math.max(faceapi.round(maxDistance - 0.1), 0.1)
-      $('#maxDistance').val(maxDistance)
-      updateResults()
-    }
+    async function onPlay(videoEl) {
+      if(videoEl.paused || videoEl.ended || !modelLoaded)
+        return false
 
-    async function loadImageFromUrl(url) {
-      const img = await requestExternalImage($('#imgUrlInput').val())
-      $('#inputImg').get(0).src = img.src
-      updateResults()
-    }
-
-    async function updateResults() {
-      const inputImgEl = $('#inputImg').get(0)
-      const { width, height } = inputImgEl
+      let start_time = new Date().getTime()
+      console.log('###############In################')
+      //const imgBuf = await fetchImage(uri)
+      const { width, height } = faceapi.getMediaDimensions(videoEl)
       const canvas = $('#overlay').get(0)
       canvas.width = width
       canvas.height = height
-
+          
       const mtcnnParams = {
         minFaceSize
       }
+      //let img = faceapi.createCanvasFromMedia(videoEl)
+      //const { results, stats } = await faceapi.nets.mtcnn.forwardWithStats(videoEl, mtcnnParams)
+      const results = await faceapi.mtcnn(videoEl, mtcnnParams)
+      console.log(results)
+      
+      let mtcnn_time = new Date().getTime()
+      let lmk68_time = 0
+      //updateTimeStats(stats.total)
+      /*****************************************************************************************************************************************/
+      if(results.length!=0){
+        locations = []
+        flen = results.length
+        for (i = 0; i<flen; i++)
+        {locations.push(results[i].faceDetection)}
+        const faceTensors = (await faceapi.extractFaceTensors(videoEl, locations))
+        let landmarksByFace = await Promise.all(faceTensors.map(t => faceapi.detectLandmarks(t)))
+        //console.log(landmarksByFace)
 
-      const fullFaceDescriptions = (await faceapi.allFacesMtcnn(inputImgEl, mtcnnParams))
-        .map(fd => fd.forSize(width, height))
+        // free memory for face image tensors after we computed their descriptors
+        faceTensors.forEach(t => t.dispose())
 
-      fullFaceDescriptions.forEach(({ detection, landmarks, descriptor }) => {
-        faceapi.drawDetection('overlay', [detection], { withScore: false })
-        faceapi.drawLandmarks('overlay', landmarks, { lineWidth: 4, color: 'red' })
-        const bestMatch = getBestMatch(trainDescriptorsByClass, descriptor)
-        const text = `${bestMatch.distance < maxDistance ? bestMatch.className : 'unkown'} (${bestMatch.distance})`
-        const { x, y, height: boxHeight } = detection.getBox()
-        faceapi.drawText(
-          canvas.getContext('2d'),
-          x,
-          y + boxHeight,
-          text,
-          Object.assign(faceapi.getDefaultDrawOptions(), { color: 'red', fontSize: 16 })
-        )
-      })
+        // shift and scale the face landmarks to the face image position in the canvas
+        landmarksByFace = landmarksByFace.map((landmarks, i) => {
+          const box = locations[i].forSize(width, height).getBox()
+          return landmarks.forSize(box.width, box.height).shift(box.x, box.y)
+        })
+        lmk68_time = new Date().getTime()
+        
+        let nMouthPoint = normalizeMouth(landmarksByFace)
+        //let MouthVectors = calculateVectors(nMouthPoint, oldnPoint)
+        let MouthEn = 0
+        if(oldnPoint.length>0)
+        { MouthEn = calculateVectors(nMouthPoint, oldnPoint)}
+        let LipsRatio = calculateLipsRatio(landmarksByFace)
+        lmkPos = landmarksByFace[0].getMouth()
+        lmkPosN = landmarksByFace[0].getNose()
+        let textU = Math.round(lmkPos[3].x*100)/100+" "+Math.round(lmkPos[3].y*100)/100
+        let textD = Math.round(lmkPos[9].x*100)/100+" "+Math.round(lmkPos[9].y*100)/100
+        let textL = Math.round(lmkPos[0].x*100)/100+" "+Math.round(lmkPos[0].y*100)/100
+        let textR = Math.round(lmkPos[6].x*100)/100+" "+Math.round(lmkPos[6].y*100)/100
+              
+        //Q.enqueue(LipsRatio)
+        //pointQ.enqueue(nMouthPoint)
+        EnQ.enqueue(MouthEn)
+        
+        if(Q.getLength()>3){
+          //Q.dequeue()
+          //pointQ.dequeue()
+          EnQ.dequeue()
+        }
+        if(EnSilent(EnQ, Vthr))
+        {
+          console.log('E*************Off**************E')
+          off()
+        }
+        else
+        {
+          console.log('E*************On**************E')
+          on()
+        }
+        /*
+        if(Silent(Q, thr)){
+          console.log(Q)
+          console.log('$*************Off**************$')
+          off()
+        }else{
+          console.log(Q)
+          console.log('@*************On**************@')
+          on()
+        }*/
+        oldnPoint = JSON.parse(JSON.stringify(nMouthPoint))
+        console.log(oldnPoint)
+
+        //let textRatio = Math.round(LipsRatio*100)+"%"
+        let textRatio = MouthEn
+        let bgColor = '#ffffff'
+        $('#left').val(textL)
+        $('#left').css('background-color', bgColor)
+        $('#right').val(textR)
+        $('#right').css('background-color', bgColor)
+        $('#up').val(textU)
+        $('#up').css('background-color', bgColor)
+        $('#down').val(textD)
+        $('#down').css('background-color', bgColor)
+        $('#mouthRatio').val(textRatio)
+        $('#mouthRatio').css('background-color', bgColor)
+        let drawLines = false
+        faceapi.drawLandmarks(canvas, landmarksByFace, { lineWidth: drawLines ? 2 : 4, drawLines, color: 'blue' })
+        
+        /***************************************************************************************************************************************/
+        if (results) {
+          results.forEach(({ faceDetection, faceLandmarks }) => {
+            if (faceDetection.score < minConfidence) {
+              return
+            }
+            faceapi.drawDetection('overlay', faceDetection.forSize(width, height))
+            //faceapi.drawLandmarks('overlay', faceLandmarks.forSize(width, height), { lineWidth: 4, color: 'red' })
+          })
+        }
+      }
+      let end_time = new Date().getTime();
+      
+      console.log((mtcnn_time - start_time) / 1000 + "sec");
+      console.log((lmk68_time - mtcnn_time) / 1000 + "sec");
+      console.log((end_time - start_time) / 1000 + "sec");
+      console.log('################Out###############')
+      if(stop)
+        return false
+     
+      setTimeout(() => onPlay(videoEl))
     }
-
-    async function onSelectionChanged(uri) {
-      const imgBuf = await fetchImage(uri)
-      $(`#inputImg`).get(0).src = (await faceapi.bufferToImage(imgBuf)).src
-      updateResults()
+    function off(){
+        if($('#recButton').hasClass('Rec')){
+          $('#recButton').removeClass("Rec");
+          $('#recButton').addClass("notRec");
+        }
     }
-
+    function on(){
+        if($('#recButton').hasClass('notRec')){
+          $('#recButton').removeClass("notRec");
+          $('#recButton').addClass("Rec");
+        }
+    }
+    function Silent(Q, threshold){
+      let i, j, t, tf = 0
+      let Qlen = Q.getLength()
+      for (i = 0; i<Qlen; i++)
+      {
+        t = Q.getitem(i)
+        //console.log(t)
+        for(j = i + 1; j<Qlen;j++)
+        {
+          tf = Q.getitem(j)
+          if((t - tf)>threshold)
+            return false
+        }
+      }
+      return true
+    }
+    function VSilent(Q, threshold){
+      let i, j, t, tf = 0
+      let Qlen = Q.getLength()
+      for (i = 0; i<Qlen; i++)
+      {
+        t = Q.getitem(i)
+      }
+      return true
+    }
+    function EnSilent(Q, threshold){
+      let i, j, t, tf = 0
+      let EnSum = 0
+      let Qlen = Q.getLength()
+      for (i = 0; i<Qlen; i++)
+      {
+        t = Q.getitem(i)
+        EnSum += t
+      }
+      EnAvg = EnSum/Qlen
+      console.log('EnAvg')
+      console.log(EnAvg)
+      if(EnAvg<Enthr)
+        return true
+      else
+        return false
+    }
     async function run() {
       await faceapi.loadMtcnnModel('/')
-      await faceapi.loadFaceRecognitionModel('/')
+      //modelLoaded = true
+      await faceapi.loadFaceLandmarkModel('/')
+      modelLoaded = true
+    
 
-      trainDescriptorsByClass = await initTrainDescriptorsByClass(faceapi.recognitionNet, 1)
-
+      const videoEl = $('#inputVideo').get(0)
+      navigator.getUserMedia(
+        { video: {} },
+        stream => videoEl.srcObject = stream,
+        err => console.error(err)
+      )
       $('#loader').hide()
-      onSelectionChanged($('#selectList select').val())
+      
+      $('#recButton').addClass("Rec");
+
+      $('#recButton').click(function(){
+        if($('#recButton').hasClass('notRec')){
+          $('#recButton').removeClass("notRec");
+          $('#recButton').addClass("Rec");
+        }
+        else{
+          $('#recButton').removeClass("Rec");
+          $('#recButton').addClass("notRec");
+        }
+      });	
+     
     }
 
     $(document).ready(function() {
       renderNavBar('#navbar', 'mtcnn_face_recognition')
-      renderImageSelectList(
-        '#selectList',
-        async (uri) => {
-          await onSelectionChanged(uri)
-        },
-        'bbt1.jpg'
-      )
       run()
     })
+
+    function Queue(){
+      var a=[],b=0;
+      this.getLength=function(){return a.length-b};
+      this.isEmpty=function(){return 0==a.length};
+      this.enqueue=function(b){a.push(b)};
+      this.dequeue=function(){if(0!=a.length){var c=a[b];2*++b>=a.length&&(a=a.slice(b),b=0);return c}};
+      this.peek=function(){return 0<a.length?a[b]:void 0};
+      this.getitem=function(i){if(i<a.length){return a[i]}};
+    }
   </script>
 </body>
 </html>

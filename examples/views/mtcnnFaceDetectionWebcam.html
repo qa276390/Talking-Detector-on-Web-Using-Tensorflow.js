@@ -49,7 +49,7 @@
     <div class="row side-by-side">
       <div class="row">
         <label for="Threshold">Lips Threshold:</label>
-        <input disabled value="3%" id="Threshold" type="text" class="bold">
+        <input disabled value="2" id="Threshold" type="text" class="bold">
       </div>
       <button
         class="waves-effect waves-light btn"
@@ -95,19 +95,23 @@
   </div>
 
   <script>
+    
     let modelLoaded = false
     let minFaceSize = 50
     let minConfidence = 0.85
     let forwardTimes = []
     let stop = false
-    let LipsRatioed = 0
 
     let drawLines = false
     let landmarks
-    let currentImg
     let Q = new Queue();
-    let oldr
+    let pointQ = new Queue();
+    let EnQ = new Queue();
     let thr = 0.03
+    let Vthr = 0.03
+    let oldnPoint = []
+    let Enthr = 2
+
     navigator.getUserMedia = ( navigator.getUserMedia ||
                        navigator.webkitGetUserMedia ||
                        navigator.mozGetUserMedia ||
@@ -124,14 +128,16 @@
     }
 
     function onIncreaseThreshold() {
-      thr= Math.min((thr + 0.01), 0.1)
-      let textT = Math.round(thr*100) + '%'
+      Enthr= Math.min((Enthr + 0.1), 3.5)
+      //let textT = Math.round(Enthr*100) + '%'
+      let textT = Enthr
       $('#Threshold').val(textT)
     }
 
     function onDecreaseThreshold() {
-      thr= Math.max((thr - 0.01), 0.0)
-      let textT = Math.round(thr*100) + '%'
+      Enthr= Math.max((Enthr - 0.1), 0.0)
+      //let textT = Math.round(Enthr*100) + '%'
+      let textT = Enthr
       $('#Threshold').val(textT)
     }
     function updateTimeStats(timeInMs) {
@@ -140,14 +146,94 @@
       $('#time').val(`${Math.round(avgTimeInMs)} ms`)
       $('#fps').val(`${faceapi.round(1000 / avgTimeInMs)}`)
     }
+    
+    function normalizeMouth(landmarksByFace){
+      let lmkMouth = landmarksByFace[0].getMouth()
+      let lmkFace = landmarksByFace[0].getJawOutline()
+      let flen = lmkMouth.length
+      let x3 = lmkFace[2].x
+      let y3 = lmkFace[2].y
+      let tmpx, tmpy = 0
+      let unit = Math.pow(Math.pow(x3-lmkFace[14].x,2)+Math.pow(y3-lmkFace[14].y,2),0.5)
+      let nMouth = []
+   
 
+      for (i = 0; i<flen; i++)
+      {
+          tmpx = (lmkMouth[i].x-x3)/unit
+          tmpy = (lmkMouth[i].y-y3)/unit
+          nMouth.push(new faceapi.Point(tmpx,tmpy))
+      }
+      return nMouth
+    }
+    function calatan2(x, y) {
+      return Math.atan2(y, x) * 180 / Math.PI;
+    }   
+    function calEntropy(Vectors){
+      let flen = Vectors.length
+      let statistic = new Array(36)
+      statistic.fill(0)
+      for (i = 0; i<flen; i++)
+      {
+         
+          x = Vectors[i].x
+          y = Vectors[i].y
+          deg = calatan2(x, y)
+          deg = (deg>0)? deg : deg+360
+          console.log(deg)
+          ind = Math.floor(deg/10)
+          console.log(ind)
+          statistic[ind]++
+      }
+      let En = 0
+      let slen = statistic.length
+      for(j = 0;j<slen; j++)
+      {
+        if(statistic[j]!=0)
+          En += ((statistic[j]/flen)*Math.log2(statistic[j]/flen))
+      }
+      En = -En
+      console.log(En)
+      return En
+    }
+    function calculateVectors(p1, p2){
+      let flen = p1.length
+      let Vectors = []
+      let tmpx, tmpy = 0
+      let x, y, u, deg, ind
+      
+      for (i = 0; i<flen; i++)
+      {
+          tmpx = p1[i].x - p2[i].x
+          tmpy = p1[i].y - p2[i].y
+          u = Math.pow(Math.pow(tmpx,2)+Math.pow(tmpy,2),0.5)
+          x = tmpx / u
+          y = tmpy / u
+          Vectors.push(new faceapi.Point(x,y))
+          
+      }
+      return Vectors
+    }
 
+    function calculateLipsRatio(landmarksByFace){
+      lmkPos = landmarksByFace[0].getMouth()
+      lmkPosLE = landmarksByFace[0].getLeftEye()
+      lmkPosRE = landmarksByFace[0].getRightEye()
+      lmkPosN = landmarksByFace[0].getNose()
+      let eyed = Math.pow((lmkPosLE[3].x-lmkPosRE[0].x), 2) + Math.pow((lmkPosLE[3].y-lmkPosRE[0].y), 2)
+      let nosed = Math.pow((lmkPosN[3].x-lmkPosN[0].x), 2) + Math.pow((lmkPosN[3].y-lmkPosN[0].y), 2)
+      let avg = (eyed+nosed)/2.0
+      let Llips = (Math.pow((lmkPos[2].x - lmkPos[10].x),2) + Math.pow((lmkPos[2].y - lmkPos[10].y),2))
+      let Rlips = (Math.pow((lmkPos[4].x - lmkPos[8].x),2) + Math.pow((lmkPos[4].y - lmkPos[8].y),2))
+      let lipsd = (Llips + Rlips )/2.0
+      let LipsRatio = Math.pow(lipsd/avg, 0.5)
+      return LipsRatio
+    }
 
     async function onPlay(videoEl) {
       if(videoEl.paused || videoEl.ended || !modelLoaded)
         return false
 
-     
       let start_time = new Date().getTime()
       console.log('###############In################')
       //const imgBuf = await fetchImage(uri)
@@ -155,21 +241,15 @@
       const canvas = $('#overlay').get(0)
       canvas.width = width
       canvas.height = height
-     
-      
+          
       const mtcnnParams = {
         minFaceSize
       }
       //let img = faceapi.createCanvasFromMedia(videoEl)
-
       //const { results, stats } = await faceapi.nets.mtcnn.forwardWithStats(videoEl, mtcnnParams)
       const results = await faceapi.mtcnn(videoEl, mtcnnParams)
-      //const results = await faceapi.mtcnn('hello', mtcnnParams)
-      //const results = await faceapi.nets.mtcnn.forward(videoEl, mtcnnParams)
-      //console.log(width)
       console.log(results)
       
-
       let mtcnn_time = new Date().getTime()
       let lmk68_time = 0
       //updateTimeStats(stats.total)
@@ -191,33 +271,41 @@
           const box = locations[i].forSize(width, height).getBox()
           return landmarks.forSize(box.width, box.height).shift(box.x, box.y)
         })
-       
         lmk68_time = new Date().getTime()
-        //console.log(landmarksByFace)
-
+        
+        let nMouthPoint = normalizeMouth(landmarksByFace)
+        //let MouthVectors = calculateVectors(nMouthPoint, oldnPoint)
+        let MouthEn = 0
+        if(oldnPoint.length>0)
+        { MouthEn = calEntropy(calculateVectors(nMouthPoint, oldnPoint))}
+        let LipsRatio = calculateLipsRatio(landmarksByFace)
         lmkPos = landmarksByFace[0].getMouth()
-        lmkPosLE = landmarksByFace[0].getLeftEye()
-        lmkPosRE = landmarksByFace[0].getRightEye()
         lmkPosN = landmarksByFace[0].getNose()
         let textU = Math.round(lmkPos[3].x*100)/100+" "+Math.round(lmkPos[3].y*100)/100
         let textD = Math.round(lmkPos[9].x*100)/100+" "+Math.round(lmkPos[9].y*100)/100
-        //let textL = Math.round(lmkPos[0].x*100)/100+" "+Math.round(lmkPos[0].y*100)/100
-        let textL = Math.round(lmkPosN[0].x*100)/100+" "+Math.round(lmkPosN[0].y*100)/100
-        //let textR = Math.round(lmkPos[6].x*100)/100+" "+Math.round(lmkPos[6].y*100)/100
-        let textR = Math.round(lmkPosN[3].x*100)/100+" "+Math.round(lmkPosN[3].y*100)/100
+        let textL = Math.round(lmkPos[0].x*100)/100+" "+Math.round(lmkPos[0].y*100)/100
+        let textR = Math.round(lmkPos[6].x*100)/100+" "+Math.round(lmkPos[6].y*100)/100
+              
+        //Q.enqueue(LipsRatio)
+        pointQ.enqueue(nMouthPoint)
+        //EnQ.enqueue(MouthEn)
         
-        let eyed = Math.pow((lmkPosLE[3].x-lmkPosRE[0].x), 2) + Math.pow((lmkPosLE[3].y-lmkPosRE[0].y), 2)
-        let nosed = Math.pow((lmkPosN[3].x-lmkPosN[0].x), 2) + Math.pow((lmkPosN[3].y-lmkPosN[0].y), 2)
-        let avg = (eyed+nosed)/2.0
-        //let Clips = (Math.pow((lmkPos[3].x - lmkPos[9].x),2) + Math.pow((lmkPos[3].y - lmkPos[9].y),2))
-        let Llips = (Math.pow((lmkPos[2].x - lmkPos[10].x),2) + Math.pow((lmkPos[2].y - lmkPos[10].y),2))
-        let Rlips = (Math.pow((lmkPos[4].x - lmkPos[8].x),2) + Math.pow((lmkPos[4].y - lmkPos[8].y),2))
-        let lipsd = (Llips + Rlips )/2.0
-        let LipsRatio = Math.pow(lipsd/avg, 0.5)
-        let dr = LipsRatio - LipsRatioed
-        Q.enqueue(LipsRatio)
-        if(Q.getLength()>3)
-          oldr = Q.dequeue()
+        if(Q.getLength()>3){
+          //Q.dequeue()
+          pointQ.dequeue()
+          //EnQ.dequeue()
+        }
+        if(EnSilent(pointQ, Vthr))
+        {
+          console.log('E*************Off**************E')
+          off()
+        }
+        else
+        {
+          console.log('E*************On**************E')
+          on()
+        }
+        /*
         if(Silent(Q, thr)){
           console.log(Q)
           console.log('$*************Off**************$')
@@ -226,11 +314,12 @@
           console.log(Q)
           console.log('@*************On**************@')
           on()
-        }
-        LipsRatioed = LipsRatio
-        //console.log(Ratio)
-        console.log(LipsRatio)
-        let textRatio = Math.round(LipsRatio*100)+"%"
+        }*/
+        oldnPoint = JSON.parse(JSON.stringify(nMouthPoint))
+        console.log(oldnPoint)
+
+        //let textRatio = Math.round(LipsRatio*100)+"%"
+        let textRatio = MouthEn
         let bgColor = '#ffffff'
         $('#left').val(textL)
         $('#left').css('background-color', bgColor)
@@ -281,11 +370,12 @@
     }
     function Silent(Q, threshold){
       let i, j, t, tf = 0
-      for (i = 0; i<Q.getLength(); i++)
+      let Qlen = Q.getLength()
+      for (i = 0; i<Qlen; i++)
       {
         t = Q.getitem(i)
-        console.log(t)
-        for(j = i + 1; j<Q.getLength();j++)
+        //console.log(t)
+        for(j = i + 1; j<Qlen;j++)
         {
           tf = Q.getitem(j)
           if((t - tf)>threshold)
@@ -293,6 +383,32 @@
         }
       }
       return true
+    }
+    function VSilent(Q, threshold){
+      let i, j, t, tf = 0
+      let Qlen = Q.getLength()
+      for (i = 0; i<Qlen; i++)
+      {
+        t = Q.getitem(i)
+      }
+      return true
+    }
+    function EnSilent(Q, threshold){
+      let i, j, t, tf = 0
+      let EnSum = 0
+      let Qlen = Q.getLength()
+      for (i = 0; i<Qlen; i++)
+      {
+        t = Q.getitem(i)
+        for(j = i + 1; j<Qlen;j++)
+        {
+          tf = Q.getitem(j)
+          if(calEntropy(calculateVectors(t, tf))>threshold)
+            return false
+        }
+      }
+      return true
+    
     }
     async function run() {
       await faceapi.loadMtcnnModel('/')
