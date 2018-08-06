@@ -405,9 +405,9 @@
         tf = Q.getitem(j)
         EnSum += calEntropy(calculateVectors(t, tf))
       }
-      EnAvg = EnSum/Qlen
+      EnAvg = EnSum/(Qlen-1)
       console.log('Avg:')
-      
+
       console.log(EnAvg)
       $('#up').val(Math.round(EnAvg*100)/100)
       $('#up').css('background-color', bgColor)
