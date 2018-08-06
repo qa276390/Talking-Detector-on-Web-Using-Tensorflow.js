@@ -155,9 +155,10 @@
       let x3 = lmkFace[2].x
       let y3 = lmkFace[2].y
       let tmpx, tmpy = 0
-      let unit = Math.pow(Math.pow(x3-lmkFace[14].x,2)+Math.pow(y3-lmkFace[14].y,2),0.5)
+      let unit = Math.sqrt(Math.pow(x3-lmkFace[14].x,2)+Math.pow(y3-lmkFace[14].y,2))
       let nMouth = []
-   
+      //console.log(landmarksByFace)
+      //console.log(unit)
 
       for (i = 0; i<flen; i++)
       {
@@ -174,13 +175,14 @@
       let flen = Vectors.length
       let statistic = new Array(36)
       statistic.fill(0)
+      //console.log(Vectors)
       for (i = 0; i<flen; i++)
       {
          
           x = Vectors[i].x
           y = Vectors[i].y
           deg = calatan2(x, y)
-          deg = (deg>0)? deg : deg+360
+          deg = (deg>=0)? deg : deg+360
           //console.log(deg)
           ind = Math.floor(deg/10)
           //console.log(ind)
@@ -188,6 +190,7 @@
       }
       let En = 0
       let slen = statistic.length
+      //console.log(statistic)
       for(j = 0;j<slen; j++)
       {
         if(statistic[j]!=0)
@@ -203,11 +206,14 @@
       let tmpx, tmpy = 0
       let x, y, u, deg, ind
       
+     // console.log(p1)
+     // console.log(p2)
       for (i = 0; i<flen; i++)
       {
           tmpx = p1[i].x - p2[i].x
           tmpy = p1[i].y - p2[i].y
-          u = Math.pow(Math.pow(tmpx,2)+Math.pow(tmpy,2),0.5)
+          u = Math.sqrt(Math.pow(tmpx,2)+Math.pow(tmpy,2))
+          //console.log(u)
           x = tmpx / u
           y = tmpy / u
           Vectors.push(new faceapi.Point(x,y))
@@ -399,11 +405,12 @@
       let EnSum = 0
       let Qlen = Q.getLength()
       
-      t = Q.peek()
+      t = Q.getitem(0)
       for(j = 1; j<Qlen;j++)
       {
         tf = Q.getitem(j)
         EnSum += calEntropy(calculateVectors(t, tf))
+        
       }
       EnAvg = EnSum/(Qlen-1)
       console.log('Avg:')
