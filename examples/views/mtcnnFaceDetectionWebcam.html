@@ -180,9 +180,9 @@
           y = Vectors[i].y
           deg = calatan2(x, y)
           deg = (deg>0)? deg : deg+360
-          console.log(deg)
+          //console.log(deg)
           ind = Math.floor(deg/10)
-          console.log(ind)
+          //console.log(ind)
           statistic[ind]++
       }
       let En = 0
@@ -316,7 +316,7 @@
           on()
         }*/
         oldnPoint = JSON.parse(JSON.stringify(nMouthPoint))
-        console.log(oldnPoint)
+        //console.log(oldnPoint)
 
         //let textRatio = Math.round(LipsRatio*100)+"%"
         let textRatio = MouthEn
@@ -397,17 +397,19 @@
       let i, j, t, tf = 0
       let EnSum = 0
       let Qlen = Q.getLength()
-      for (i = 0; i<Qlen; i++)
+      //for (i = 0; i<Qlen; i++)
+      //{
+      t = Q.peek()
+      for(j = i + 1; j<Qlen;j++)
       {
-        t = Q.getitem(i)
-        for(j = i + 1; j<Qlen;j++)
-        {
-          tf = Q.getitem(j)
-          if(calEntropy(calculateVectors(t, tf))>threshold)
-            return false
-        }
+        tf = Q.getitem(j)
+        EnSum += calEntropy(calculateVectors(t, tf))
       }
-      return true
+      EnAvg = EnSum/Qlen
+      if(EnAvg>threshold)
+        return false
+      else
+        return true
     
     }
     async function run() {
