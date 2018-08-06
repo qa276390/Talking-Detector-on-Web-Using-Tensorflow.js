@@ -102,6 +102,7 @@
     let forwardTimes = []
     let stop = false
 
+    let bgColor = '#ffffff'
     let drawLines = false
     let landmarks
     let Q = new Queue();
@@ -130,14 +131,14 @@
     function onIncreaseThreshold() {
       Enthr= Math.min((Enthr + 0.1), 3.5)
       //let textT = Math.round(Enthr*100) + '%'
-      let textT = Enthr
+      let textT = Math.round(Enthr*100)/100
       $('#Threshold').val(textT)
     }
 
     function onDecreaseThreshold() {
       Enthr= Math.max((Enthr - 0.1), 0.0)
       //let textT = Math.round(Enthr*100) + '%'
-      let textT = Enthr
+      let textT = Math.round(Enthr*100)/100
       $('#Threshold').val(textT)
     }
     function updateTimeStats(timeInMs) {
@@ -290,12 +291,12 @@
         pointQ.enqueue(nMouthPoint)
         //EnQ.enqueue(MouthEn)
         
-        if(Q.getLength()>3){
+        if(pointQ.getLength()>3){
           //Q.dequeue()
           pointQ.dequeue()
           //EnQ.dequeue()
         }
-        if(EnSilent(pointQ, Vthr))
+        if(EnSilent(pointQ, Enthr))
         {
           console.log('E*************Off**************E')
           off()
@@ -320,13 +321,13 @@
 
         //let textRatio = Math.round(LipsRatio*100)+"%"
         let textRatio = MouthEn
-        let bgColor = '#ffffff'
+        
         $('#left').val(textL)
         $('#left').css('background-color', bgColor)
         $('#right').val(textR)
         $('#right').css('background-color', bgColor)
-        $('#up').val(textU)
-        $('#up').css('background-color', bgColor)
+        //$('#up').val(textU)
+        //$('#up').css('background-color', bgColor)
         $('#down').val(textD)
         $('#down').css('background-color', bgColor)
         $('#mouthRatio').val(textRatio)
@@ -397,15 +398,20 @@
       let i, j, t, tf = 0
       let EnSum = 0
       let Qlen = Q.getLength()
-      //for (i = 0; i<Qlen; i++)
-      //{
+      
       t = Q.peek()
-      for(j = i + 1; j<Qlen;j++)
+      for(j = 1; j<Qlen;j++)
       {
         tf = Q.getitem(j)
         EnSum += calEntropy(calculateVectors(t, tf))
       }
       EnAvg = EnSum/Qlen
+      console.log('Avg:')
+      
+      console.log(EnAvg)
+      $('#up').val(Math.round(EnAvg*100)/100)
+      $('#up').css('background-color', bgColor)
+
       if(EnAvg>threshold)
         return false
       else
