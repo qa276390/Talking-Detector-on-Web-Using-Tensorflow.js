@@ -21,34 +21,18 @@
     <div class="row side-by-side">    
       
       <div class="row">
-        <label for="up">Up:</label>
+        <label for="up">Entropy:</label>
         <input disabled value="-" id="up" type="text" class="bold">
+      </div>
+      <div class="row">
+        <label for="mouthRatio">Avg.:</label>
+        <input disabled value="-" id="mouthRatio" type="text" class="bold">
       </div>
       <button id="recButton"></button>
     </div>
-    <div class="row side-by-side">    
-      <div class="row">
-        <label for="left">Left:</label>
-        <input disabled value="-" id="left" type="text" class="bold">
-      </div>
-      <div class="row">
-        <label for="mouthRatio">Mouth Ratio:</label>
-        <input disabled value="-" id="mouthRatio" type="text" class="bold">
-      </div>
-      <div class="row">
-        <label for="right">Right:</label>
-        <input disabled value="-" id="right" type="text" class="bold">
-      </div>
-    </div>
-    <div class="row side-by-side">    
-      <div class="row">
-        <label for="down">Down:</label>
-        <input disabled value="-" id="down" type="text" class="bold">
-      </div>
-    </div>
     <div class="row side-by-side">
       <div class="row">
-        <label for="Threshold">Lips Threshold:</label>
+        <label for="Threshold">Entropy Threshold:</label>
         <input disabled value="2" id="Threshold" type="text" class="bold">
       </div>
       <button
@@ -67,7 +51,7 @@
     <div class="row side-by-side">
       <div class="row">
         <label for="minFaceSize">Minimum Face Size:</label>
-        <input disabled value="200" id="minFaceSize" type="text" class="bold">
+        <input disabled value="50" id="minFaceSize" type="text" class="bold">
       </div>
       <button
         class="waves-effect waves-light btn"
@@ -90,6 +74,22 @@
       <div class="row">
         <label for="fps">Estimated Fps:</label>
         <input disabled value="-" id="fps" type="text" class="bold">
+      </div>
+    </div>
+    <div class="row side-by-side">    
+      <div class="row">
+        <label for="left">Left:</label>
+        <input disabled value="-" id="left" type="text" class="bold">
+      </div>
+      <div class="row">
+        <label for="right">Right:</label>
+        <input disabled value="-" id="right" type="text" class="bold">
+      </div>
+    </div>
+    <div class="row side-by-side">    
+      <div class="row">
+        <label for="down">Down:</label>
+        <input disabled value="-" id="down" type="text" class="bold">
       </div>
     </div>
   </div>
@@ -129,7 +129,7 @@
     }
 
     function onIncreaseThreshold() {
-      Enthr= Math.min((Enthr + 0.1), 3.5)
+      Enthr= Math.min((Enthr + 0.1), 5)
       //let textT = Math.round(Enthr*100) + '%'
       let textT = Math.round(Enthr*100)/100
       $('#Threshold').val(textT)
@@ -157,9 +157,6 @@
       let tmpx, tmpy = 0
       let unit = Math.sqrt(Math.pow(x3-lmkFace[14].x,2)+Math.pow(y3-lmkFace[14].y,2))
       let nMouth = []
-      //console.log(landmarksByFace)
-      //console.log(unit)
-
       for (i = 0; i<flen; i++)
       {
           tmpx = (lmkMouth[i].x-x3)/unit
@@ -178,14 +175,11 @@
       //console.log(Vectors)
       for (i = 0; i<flen; i++)
       {
-         
           x = Vectors[i].x
           y = Vectors[i].y
           deg = calatan2(x, y)
           deg = (deg>=0)? deg : deg+360
-          //console.log(deg)
           ind = Math.floor(deg/10)
-          //console.log(ind)
           statistic[ind]++
       }
       let En = 0
@@ -205,9 +199,7 @@
       let Vectors = []
       let tmpx, tmpy = 0
       let x, y, u, deg, ind
-      
-     // console.log(p1)
-     // console.log(p2)
+
       for (i = 0; i<flen; i++)
       {
           tmpx = p1[i].x - p2[i].x
@@ -217,7 +209,6 @@
           x = tmpx / u
           y = tmpy / u
           Vectors.push(new faceapi.Point(x,y))
-          
       }
       return Vectors
     }
@@ -252,7 +243,6 @@
       const mtcnnParams = {
         minFaceSize
       }
-      //let img = faceapi.createCanvasFromMedia(videoEl)
       //const { results, stats } = await faceapi.nets.mtcnn.forwardWithStats(videoEl, mtcnnParams)
       const results = await faceapi.mtcnn(videoEl, mtcnnParams)
       console.log(results)
@@ -283,16 +273,17 @@
         let nMouthPoint = normalizeMouth(landmarksByFace)
         //let MouthVectors = calculateVectors(nMouthPoint, oldnPoint)
         let MouthEn = 0
-        if(oldnPoint.length>0)
-        { MouthEn = calEntropy(calculateVectors(nMouthPoint, oldnPoint))}
-        let LipsRatio = calculateLipsRatio(landmarksByFace)
-        lmkPos = landmarksByFace[0].getMouth()
-        lmkPosN = landmarksByFace[0].getNose()
+        //if(oldnPoint.length>0)
+        //{ MouthEn = calEntropy(calculateVectors(nMouthPoint, oldnPoint))}
+        //let LipsRatio = calculateLipsRatio(landmarksByFace)
+        //lmkPos = landmarksByFace[0].getMouth()
+        //lmkPosN = landmarksByFace[0].getNose()
+        /*
         let textU = Math.round(lmkPos[3].x*100)/100+" "+Math.round(lmkPos[3].y*100)/100
         let textD = Math.round(lmkPos[9].x*100)/100+" "+Math.round(lmkPos[9].y*100)/100
         let textL = Math.round(lmkPos[0].x*100)/100+" "+Math.round(lmkPos[0].y*100)/100
         let textR = Math.round(lmkPos[6].x*100)/100+" "+Math.round(lmkPos[6].y*100)/100
-              
+        */    
         //Q.enqueue(LipsRatio)
         pointQ.enqueue(nMouthPoint)
         //EnQ.enqueue(MouthEn)
@@ -328,16 +319,16 @@
         //let textRatio = Math.round(LipsRatio*100)+"%"
         let textRatio = MouthEn
         
-        $('#left').val(textL)
-        $('#left').css('background-color', bgColor)
-        $('#right').val(textR)
-        $('#right').css('background-color', bgColor)
+        //$('#left').val(textL)
+        //$('#left').css('background-color', bgColor)
+        //$('#right').val(textR)
+        //$('#right').css('background-color', bgColor)
         //$('#up').val(textU)
         //$('#up').css('background-color', bgColor)
-        $('#down').val(textD)
-        $('#down').css('background-color', bgColor)
-        $('#mouthRatio').val(textRatio)
-        $('#mouthRatio').css('background-color', bgColor)
+        //$('#down').val(textD)
+        //$('#down').css('background-color', bgColor)
+        //$('#mouthRatio').val(textRatio)
+        //$('#mouthRatio').css('background-color', bgColor)
         let drawLines = false
         faceapi.drawLandmarks(canvas, landmarksByFace, { lineWidth: drawLines ? 2 : 4, drawLines, color: 'blue' })
         
@@ -401,7 +392,7 @@
       return true
     }
     function EnSilent(Q, threshold){
-      let i, j, t, tf = 0
+      let i, j, t, tf, En = 0
       let EnSum = 0
       let Qlen = Q.getLength()
       
@@ -409,8 +400,12 @@
       for(j = 1; j<Qlen;j++)
       {
         tf = Q.getitem(j)
-        EnSum += calEntropy(calculateVectors(t, tf))
-        
+        if(j==1){
+          En = calEntropy(calculateVectors(t, tf))
+          EnSum += En
+        }else{
+          EnSum += calEntropy(calculateVectors(t, tf))
+        }
       }
       EnAvg = EnSum/(Qlen-1)
       console.log('Avg:')
@@ -419,6 +414,8 @@
       $('#up').val(Math.round(EnAvg*100)/100)
       $('#up').css('background-color', bgColor)
 
+      $('#mouthRatio').val(Math.round(En*100)/100)
+      $('#mouthRatio').css('background-color', bgColor)
       if(EnAvg>threshold)
         return false
       else

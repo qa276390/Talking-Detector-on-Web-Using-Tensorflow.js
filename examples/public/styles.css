@@ -82,13 +82,13 @@
 	outline: none;
 }
 .notRec{
-	background-color: rgb(19, 0, 0);
+	background-color: rgb(92, 2, 2);
 }
 
 .Rec{
   background-color: red;
 	animation-name: pulse;
-	animation-duration: 0.25s;
+	animation-duration: 0.15s;
 	animation-iteration-count: infinite;
 	animation-timing-function: linear;
 }
