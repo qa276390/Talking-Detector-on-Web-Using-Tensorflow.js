@@ -166,6 +166,30 @@
       }
       return nMouth
     }
+    function super_normalizeMouth(landmarksByFace){
+      let lmkMouth = landmarksByFace[0].getMouth()
+      let flen = lmkMouth.length
+      let x0 = lmkMouth[0].x
+      let y0 = lmkMouth[0].y
+      let x6 = lmkMouth[6].x
+      let y6 = lmkMouth[6].y
+      let theta = Math.atan2(y6-y0, x6-x0)
+      
+      let tmpx, tmpy, dx, dy = 0
+      let unit = Math.sqrt(Math.pow(x6-x0,2)+Math.pow(y6-y0,2))
+      let nMouth = []
+      for (i = 0; i<flen; i++)
+      {
+          dx = (lmkMouth[i].x-x0)/unit
+          dy = (lmkMouth[i].y-y0)/unit
+          tmpx = dx * Math.cos(theta) + dy * Math.sin(theta)
+          tmpy = -dx * Math.sin(theta) + dy * Math.cos(theta)
+          nMouth.push(new faceapi.Point(tmpx,tmpy))
+      }
+      console.log('super normalize Mouth:')
+      console.log(nMouth)
+      return nMouth
+    }
     function calatan2(x, y) {
       return Math.atan2(y, x) * 180 / Math.PI;
     }   
@@ -173,7 +197,7 @@
       let flen = Vectors.length
       let statistic = new Array(36)
       statistic.fill(0)
-      console.log(Vectors)
+      //console.log(Vectors)
       for (i = 0; i<flen; i++)
       {
           x = Vectors[i].x
@@ -185,7 +209,7 @@
       }
       let En = 0
       let slen = statistic.length
-      console.log(statistic)
+      //console.log(statistic)
       for(j = 0;j<slen; j++)
       {
         if(statistic[j]!=0)
@@ -201,8 +225,8 @@
       let Vectors = []
       let tmpx, tmpy = 0
       let x, y, u, deg, ind
-      console.log(p1)
-      console.log(p2)
+      //console.log(p1)
+      //console.log(p2)
       for (i = 0; i<flen; i++)
       {
           tmpx = p1[i].x - p2[i].x
@@ -253,7 +277,6 @@
       let mtcnn_time = new Date().getTime()
       let lmk68_time = 0
       //updateTimeStats(stats.total)
-      /*****************************************************************************************************************************************/
       if(results.length!=0){
         locations = []
         flen = results.length
@@ -273,28 +296,14 @@
         })
         lmk68_time = new Date().getTime()
         
-        let nMouthPoint = normalizeMouth(landmarksByFace)
-        //let MouthVectors = calculateVectors(nMouthPoint, oldnPoint)
-        //let MouthEn = 0
-        //if(oldnPoint.length>0)
-        //{ MouthEn = calEntropy(calculateVectors(nMouthPoint, oldnPoint))}
-        //let LipsRatio = calculateLipsRatio(landmarksByFace)
-        //lmkPos = landmarksByFace[0].getMouth()
-        //lmkPosN = landmarksByFace[0].getNose()
-        /*
-        let textU = Math.round(lmkPos[3].x*100)/100+" "+Math.round(lmkPos[3].y*100)/100
-        let textD = Math.round(lmkPos[9].x*100)/100+" "+Math.round(lmkPos[9].y*100)/100
-        let textL = Math.round(lmkPos[0].x*100)/100+" "+Math.round(lmkPos[0].y*100)/100
-        let textR = Math.round(lmkPos[6].x*100)/100+" "+Math.round(lmkPos[6].y*100)/100
-        */    
-        //Q.enqueue(LipsRatio)
+        //let nMouthPoint = normalizeMouth(landmarksByFace)
+        let nMouthPoint = super_normalizeMouth(landmarksByFace)
+     
+
         pointQ.enqueue(nMouthPoint)
-        //EnQ.enqueue(MouthEn)
         
         if(pointQ.getLength()>3){
-          //Q.dequeue()
           pointQ.dequeue()
-          //EnQ.dequeue()
         }
         if(EnSilent(pointQ, Enthr))
         {
@@ -306,32 +315,7 @@
           console.log('E*************On**************E')
           on()
         }
-        /*
-        if(Silent(Q, thr)){
-          console.log(Q)
-          console.log('$*************Off**************$')
-          off()
-        }else{
-          console.log(Q)
-          console.log('@*************On**************@')
-          on()
-        }*/
-        //oldnPoint = JSON.parse(JSON.stringify(nMouthPoint))
-        //console.log(oldnPoint)
 
-        //let textRatio = Math.round(LipsRatio*100)+"%"
-        //let textRatio = MouthEn
-        
-        //$('#left').val(textL)
-        //$('#left').css('background-color', bgColor)
-        //$('#right').val(textR)
-        //$('#right').css('background-color', bgColor)
-        //$('#up').val(textU)
-        //$('#up').css('background-color', bgColor)
-        //$('#down').val(textD)
-        //$('#down').css('background-color', bgColor)
-        //$('#mouthRatio').val(textRatio)
-        //$('#mouthRatio').css('background-color', bgColor)
         let drawLines = false
         faceapi.drawLandmarks(canvas, landmarksByFace, { lineWidth: drawLines ? 2 : 4, drawLines, color: 'blue' })
         
@@ -370,31 +354,7 @@
         }
         OFF = false
     }
-    function Silent(Q, threshold){
-      let i, j, t, tf = 0
-      let Qlen = Q.getLength()
-      for (i = 0; i<Qlen; i++)
-      {
-        t = Q.getitem(i)
-        //console.log(t)
-        for(j = i + 1; j<Qlen;j++)
-        {
-          tf = Q.getitem(j)
-          if((t - tf)>threshold)
-            return false
-        }
-      }
-      return true
-    }
-    function VSilent(Q, threshold){
-      let i, j, t, tf = 0
-      let Qlen = Q.getLength()
-      for (i = 0; i<Qlen; i++)
-      {
-        t = Q.getitem(i)
-      }
-      return true
-    }
+  
     function EnSilent(Q, threshold){
       let i, j, t, tf, EN = 0
       let EnSum, Entmp, Enavg = 0
@@ -440,40 +400,6 @@
           return true
       }
 
-
-      /*
-      t = Q.getitem(0)
-      for(j = 1; j<Qlen;j++)
-      {
-        tf = Q.getitem(j)
-        ENtmp = calEntropy(calculateVectors(t, tf))
-        if(j==1){
-          EN = ENtmp
-          $('#mouthRatio').val(Math.round(EN*100)/100)
-          $('#mouthRatio').css('background-color', bgColor)
-        }
-        if(ENtmp>threshold)
-          return false
-        */
-        /*
-        if(j==1){
-          EN = calEntropy(calculateVectors(t, tf))
-          EnSum += EN
-        }else{
-          EnSum += calEntropy(calculateVectors(t, tf))
-        }
-      }*/
-      //EnAvg = EnSum/(Qlen-1)
-      //console.log('Avg:')
-      //console.log(EnAvg)
-
-     
-
-      //$('#enavg').val(Math.round(EN*100)/100)
-      //$('#enavg').css('background-color', bgColor)
-      //if(EnAvg>threshold)
-      //  return false
-      //else
       return true
     
     }
