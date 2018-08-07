@@ -68,6 +68,24 @@
     </div>
     <div class="row side-by-side">
       <div class="row">
+        <label for="uthr">Minimum Unit:</label>
+        <input disabled value="0.01" id="uthr" type="text" class="bold">
+      </div>
+      <button
+        class="waves-effect waves-light btn"
+        onclick="onDecreaseuthr()"
+      >
+        <i class="material-icons left">-</i>
+      </button>
+      <button
+        class="waves-effect waves-light btn"
+        onclick="onIncreaseuthr()"
+      >
+        <i class="material-icons left">+</i>
+      </button>
+    </div>
+    <div class="row side-by-side">
+      <div class="row">
         <label for="time">Time:</label>
         <input disabled value="-" id="time" type="text" class="bold">
       </div>
@@ -110,6 +128,7 @@
     let EnQ = new Queue();
     let thr = 0.03
     let Vthr = 0.03
+    let uthr = 0.01
     let oldnPoint = []
     let Enthr = 3.2
     let OFF = false
@@ -141,6 +160,19 @@
       Enthr= Math.max((Enthr - 0.1), 0.0)
       //let textT = Math.round(Enthr*100) + '%'
       let textT = Math.round(Enthr*100)/100
+      $('#Threshold').val(textT)
+    }
+    function onIncreaseuthr() {
+      uthr= Math.min((uthr + 0.001), 3)
+      //let textT = Math.round(Enthr*100) + '%'
+      let textT = Math.round(uthr*100)/100
+      $('#Threshold').val(textT)
+    }
+
+    function onDecreaseuthr() {
+      uthr= Math.max((uthr - 0.001), 0.0)
+      //let textT = Math.round(Enthr*100) + '%'
+      let textT = Math.round(uthr*100)/100
       $('#Threshold').val(textT)
     }
     function updateTimeStats(timeInMs) {
@@ -233,9 +265,17 @@
           tmpx = p1[i].x - p2[i].x
           tmpy = p1[i].y - p2[i].y
           u = Math.sqrt(Math.pow(tmpx,2)+Math.pow(tmpy,2))
-          //console.log(u)
-          x = tmpx / u
-          y = tmpy / u
+          console.log('u:')
+          console.log(u)
+          if(u<uthr)
+          {
+            x = 0
+            y = 0
+          }
+          else{
+            x = tmpx / u
+            y = tmpy / u
+          }
           Vectors.push(new faceapi.Point(x,y))
       }
       return Vectors
@@ -337,6 +377,9 @@
           })
         }
         end_time = new Date().getTime();
+      }else{
+        console.log('E*************Off**************E')
+        off()
       }
      
       
