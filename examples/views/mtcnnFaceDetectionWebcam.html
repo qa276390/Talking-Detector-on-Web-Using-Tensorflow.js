@@ -113,6 +113,7 @@
     let oldnPoint = []
     let Enthr = 2
     let OFF = false
+    let end_time = 0
 
     navigator.getUserMedia = ( navigator.getUserMedia ||
                        navigator.webkitGetUserMedia ||
@@ -298,8 +299,14 @@
         
         //let nMouthPoint = normalizeMouth(landmarksByFace)
         let nMouthPoint = super_normalizeMouth(landmarksByFace)
-     
-
+        
+        
+        checktime = new Date().getTime()
+        if(checktime-end_time>1){
+          while(!pointQ.isEmpty())
+          {pointQ.dequeue()}
+        }
+        
         pointQ.enqueue(nMouthPoint)
         
         if(pointQ.getLength()>3){
@@ -329,7 +336,7 @@
           })
         }
       }
-      let end_time = new Date().getTime();
+      end_time = new Date().getTime();
       
       console.log((mtcnn_time - start_time) / 1000 + "sec");
       console.log((lmk68_time - mtcnn_time) / 1000 + "sec");
