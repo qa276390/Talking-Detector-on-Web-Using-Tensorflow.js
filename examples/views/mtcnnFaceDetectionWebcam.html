@@ -166,14 +166,14 @@
       uthr= Math.min((uthr + 0.001), 3)
       //let textT = Math.round(Enthr*100) + '%'
       let textT = Math.round(uthr*1000)/1000
-      $('#Threshold').val(textT)
+      $('#uthr').val(textT)
     }
 
     function onDecreaseuthr() {
       uthr= Math.max((uthr - 0.001), 0.0)
       //let textT = Math.round(Enthr*100) + '%'
       let textT = Math.round(uthr*1000)/1000
-      $('#Threshold').val(textT)
+      $('#uthr').val(textT)
     }
     function updateTimeStats(timeInMs) {
       forwardTimes = [timeInMs].concat(forwardTimes).slice(0, 30)
