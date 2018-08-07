@@ -33,7 +33,7 @@
     <div class="row side-by-side">
       <div class="row">
         <label for="Threshold">Entropy Threshold:</label>
-        <input disabled value="2" id="Threshold" type="text" class="bold">
+        <input disabled value="3.2" id="Threshold" type="text" class="bold">
       </div>
       <button
         class="waves-effect waves-light btn"
@@ -111,7 +111,7 @@
     let thr = 0.03
     let Vthr = 0.03
     let oldnPoint = []
-    let Enthr = 2
+    let Enthr = 3.2
     let OFF = false
     let end_time = 0
 
@@ -312,7 +312,8 @@
         if(pointQ.getLength()>3){
           pointQ.dequeue()
         }
-        if(EnSilent(pointQ, Enthr))
+    
+        if(pointQ.getLength()!=1 && EnSilent(pointQ, Enthr))
         {
           console.log('E*************Off**************E')
           off()
