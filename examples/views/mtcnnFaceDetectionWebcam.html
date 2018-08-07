@@ -21,12 +21,12 @@
     <div class="row side-by-side">    
       
       <div class="row">
-        <label for="up">Entropy:</label>
-        <input disabled value="-" id="up" type="text" class="bold">
+        <label for="en">Entropy:</label>
+        <input disabled value="-" id="en" type="text" class="bold">
       </div>
       <div class="row">
-        <label for="mouthRatio">Avg.:</label>
-        <input disabled value="-" id="mouthRatio" type="text" class="bold">
+        <label for="enavg">Avg.:</label>
+        <input disabled value="-" id="enavg" type="text" class="bold">
       </div>
       <button id="recButton"></button>
     </div>
@@ -112,6 +112,7 @@
     let Vthr = 0.03
     let oldnPoint = []
     let Enthr = 2
+    let OFF = false
 
     navigator.getUserMedia = ( navigator.getUserMedia ||
                        navigator.webkitGetUserMedia ||
@@ -192,8 +193,7 @@
       }
       En = -En
       console.log(En)
-      if(En==0 || En==-0)
-      {alert('Entropy=0?')}
+      
       return En
     }
     function calculateVectors(p1, p2){
@@ -362,12 +362,14 @@
           $('#recButton').removeClass("Rec");
           $('#recButton').addClass("notRec");
         }
+        OFF = true
     }
     function on(){
         if($('#recButton').hasClass('notRec')){
           $('#recButton').removeClass("notRec");
           $('#recButton').addClass("Rec");
         }
+        OFF = false
     }
     function Silent(Q, threshold){
       let i, j, t, tf = 0
@@ -396,9 +398,51 @@
     }
     function EnSilent(Q, threshold){
       let i, j, t, tf, EN = 0
-      let EnSum, Entmp = 0
+      let EnSum, Entmp, Enavg = 0
       let Qlen = Q.getLength()
-      
+
+      t = Q.getitem(0)
+      if(OFF)
+      {
+        //if rec is off, any entropy > thr than turn it on
+        for(j = 1; j<Qlen;j++)
+        {
+          tf = Q.getitem(j)
+          ENtmp = calEntropy(calculateVectors(t, tf))
+          if(j==1){
+            EN = ENtmp
+            $('#en').val(Math.round(EN*100)/100)
+            $('#en').css('background-color', bgColor)
+          }
+          if(ENtmp>threshold)
+            return false
+          }
+      }
+      else{
+        //if rec is on, avg entropy < thr turn it off
+        for(j = 1; j<Qlen;j++)
+        {
+          tf = Q.getitem(j)
+          if(j==1){
+            EN = calEntropy(calculateVectors(t, tf))
+            EnSum += EN
+          }else{
+            EnSum += calEntropy(calculateVectors(t, tf))
+         }
+        }
+        EnAvg = EnSum/(Qlen-1)
+        $('#enavg').val(Math.round(EnAvg*100)/100)
+        $('#enavg').css('background-color', bgColor)
+        $('#en').val(Math.round(EN*100)/100)
+        $('#en').css('background-color', bgColor)
+        if(EnAvg>threshold)
+          return false
+        else
+          return true
+      }
+
+
+      /*
       t = Q.getitem(0)
       for(j = 1; j<Qlen;j++)
       {
@@ -411,23 +455,23 @@
         }
         if(ENtmp>threshold)
           return false
+        */
         /*
         if(j==1){
           EN = calEntropy(calculateVectors(t, tf))
           EnSum += EN
         }else{
           EnSum += calEntropy(calculateVectors(t, tf))
-        }*/
-      }
+        }
+      }*/
       //EnAvg = EnSum/(Qlen-1)
       //console.log('Avg:')
       //console.log(EnAvg)
 
-      $('#up').val(Math.round(Entmp*100)/100)
-      $('#up').css('background-color', bgColor)
+     
 
-      $('#mouthRatio').val(Math.round(EN*100)/100)
-      $('#mouthRatio').css('background-color', bgColor)
+      //$('#enavg').val(Math.round(EN*100)/100)
+      //$('#enavg').css('background-color', bgColor)
       //if(EnAvg>threshold)
       //  return false
       //else
