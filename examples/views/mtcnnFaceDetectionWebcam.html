@@ -335,7 +335,6 @@
         let drawLines = false
         faceapi.drawLandmarks(canvas, landmarksByFace, { lineWidth: drawLines ? 2 : 4, drawLines, color: 'blue' })
         
-        /***************************************************************************************************************************************/
         if (results) {
           results.forEach(({ faceDetection, faceLandmarks }) => {
             if (faceDetection.score < minConfidence) {
@@ -402,9 +401,9 @@
       let Qlen = Q.getLength()
 
       t = Q.getitem(0)
-      if(OFF)
+      if(true)
       {
-        //if rec is off, any entropy > thr than turn it on
+        //if rec is off, any "entropy > thr" than turn it on
         for(j = 1; j<Qlen;j++)
         {
           tf = Q.getitem(j)
@@ -416,10 +415,10 @@
           }
           if(ENtmp>threshold)
             return false
-          }
+        }
       }
       else{
-        //if rec is on, avg entropy < thr turn it off
+        //if rec is on, "avg entropy < thr" turn it off
         for(j = 1; j<Qlen;j++)
         {
           tf = Q.getitem(j)
