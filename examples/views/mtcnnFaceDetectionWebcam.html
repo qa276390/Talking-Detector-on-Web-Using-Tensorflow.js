@@ -302,7 +302,7 @@
         
         
         checktime = new Date().getTime()
-        if(checktime-end_time>1){
+        if(checktime-end_time>1000){
           while(!pointQ.isEmpty())
           {pointQ.dequeue()}
         }
@@ -335,8 +335,9 @@
             //faceapi.drawLandmarks('overlay', faceLandmarks.forSize(width, height), { lineWidth: 4, color: 'red' })
           })
         }
+        end_time = new Date().getTime();
       }
-      end_time = new Date().getTime();
+     
       
       console.log((mtcnn_time - start_time) / 1000 + "sec");
       console.log((lmk68_time - mtcnn_time) / 1000 + "sec");
