@@ -69,7 +69,7 @@
     <div class="row side-by-side">
       <div class="row">
         <label for="uthr">Minimum Unit:</label>
-        <input disabled value="0.02" id="uthr" type="text" class="bold">
+        <input disabled value="0.020" id="uthr" type="text" class="bold">
       </div>
       <button
         class="waves-effect waves-light btn"
@@ -159,7 +159,7 @@
     function onDecreaseThreshold() {
       Enthr= Math.max((Enthr - 0.1), 0.0)
       //let textT = Math.round(Enthr*100) + '%'
-      let textT = Math.round(Enthr*1000)/1000
+      let textT = Math.round(Enthr*100)/100
       $('#Threshold').val(textT)
     }
     function onIncreaseuthr() {
@@ -172,7 +172,7 @@
     function onDecreaseuthr() {
       uthr= Math.max((uthr - 0.001), 0.0)
       //let textT = Math.round(Enthr*100) + '%'
-      let textT = Math.round(uthr*100)/100
+      let textT = Math.round(uthr*1000)/1000
       $('#Threshold').val(textT)
     }
     function updateTimeStats(timeInMs) {
