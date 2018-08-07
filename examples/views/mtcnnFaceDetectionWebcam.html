@@ -69,7 +69,7 @@
     <div class="row side-by-side">
       <div class="row">
         <label for="uthr">Minimum Unit:</label>
-        <input disabled value="0.01" id="uthr" type="text" class="bold">
+        <input disabled value="0.02" id="uthr" type="text" class="bold">
       </div>
       <button
         class="waves-effect waves-light btn"
@@ -128,7 +128,7 @@
     let EnQ = new Queue();
     let thr = 0.03
     let Vthr = 0.03
-    let uthr = 0.01
+    let uthr = 0.02
     let oldnPoint = []
     let Enthr = 3.2
     let OFF = false
@@ -159,13 +159,13 @@
     function onDecreaseThreshold() {
       Enthr= Math.max((Enthr - 0.1), 0.0)
       //let textT = Math.round(Enthr*100) + '%'
-      let textT = Math.round(Enthr*100)/100
+      let textT = Math.round(Enthr*1000)/1000
       $('#Threshold').val(textT)
     }
     function onIncreaseuthr() {
       uthr= Math.min((uthr + 0.001), 3)
       //let textT = Math.round(Enthr*100) + '%'
-      let textT = Math.round(uthr*100)/100
+      let textT = Math.round(uthr*1000)/1000
       $('#Threshold').val(textT)
     }
 
