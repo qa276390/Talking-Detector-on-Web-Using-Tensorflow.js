@@ -172,7 +172,7 @@
       let flen = Vectors.length
       let statistic = new Array(36)
       statistic.fill(0)
-      //console.log(Vectors)
+      console.log(Vectors)
       for (i = 0; i<flen; i++)
       {
           x = Vectors[i].x
@@ -184,7 +184,7 @@
       }
       let En = 0
       let slen = statistic.length
-      //console.log(statistic)
+      console.log(statistic)
       for(j = 0;j<slen; j++)
       {
         if(statistic[j]!=0)
@@ -192,6 +192,8 @@
       }
       En = -En
       console.log(En)
+      if(En==0 || En==-0)
+      {alert('Entropy=0?')}
       return En
     }
     function calculateVectors(p1, p2){
@@ -199,7 +201,8 @@
       let Vectors = []
       let tmpx, tmpy = 0
       let x, y, u, deg, ind
-
+      console.log(p1)
+      console.log(p2)
       for (i = 0; i<flen; i++)
       {
           tmpx = p1[i].x - p2[i].x
@@ -272,7 +275,7 @@
         
         let nMouthPoint = normalizeMouth(landmarksByFace)
         //let MouthVectors = calculateVectors(nMouthPoint, oldnPoint)
-        let MouthEn = 0
+        //let MouthEn = 0
         //if(oldnPoint.length>0)
         //{ MouthEn = calEntropy(calculateVectors(nMouthPoint, oldnPoint))}
         //let LipsRatio = calculateLipsRatio(landmarksByFace)
@@ -313,11 +316,11 @@
           console.log('@*************On**************@')
           on()
         }*/
-        oldnPoint = JSON.parse(JSON.stringify(nMouthPoint))
+        //oldnPoint = JSON.parse(JSON.stringify(nMouthPoint))
         //console.log(oldnPoint)
 
         //let textRatio = Math.round(LipsRatio*100)+"%"
-        let textRatio = MouthEn
+        //let textRatio = MouthEn
         
         //$('#left').val(textL)
         //$('#left').css('background-color', bgColor)
@@ -392,34 +395,43 @@
       return true
     }
     function EnSilent(Q, threshold){
-      let i, j, t, tf, En = 0
-      let EnSum = 0
+      let i, j, t, tf, EN = 0
+      let EnSum, Entmp = 0
       let Qlen = Q.getLength()
       
       t = Q.getitem(0)
       for(j = 1; j<Qlen;j++)
       {
         tf = Q.getitem(j)
+        ENtmp = calEntropy(calculateVectors(t, tf))
         if(j==1){
-          En = calEntropy(calculateVectors(t, tf))
-          EnSum += En
+          EN = ENtmp
+          $('#mouthRatio').val(Math.round(EN*100)/100)
+          $('#mouthRatio').css('background-color', bgColor)
+        }
+        if(ENtmp>threshold)
+          return false
+        /*
+        if(j==1){
+          EN = calEntropy(calculateVectors(t, tf))
+          EnSum += EN
         }else{
           EnSum += calEntropy(calculateVectors(t, tf))
-        }
+        }*/
       }
-      EnAvg = EnSum/(Qlen-1)
-      console.log('Avg:')
+      //EnAvg = EnSum/(Qlen-1)
+      //console.log('Avg:')
+      //console.log(EnAvg)
 
-      console.log(EnAvg)
-      $('#up').val(Math.round(EnAvg*100)/100)
+      $('#up').val(Math.round(Entmp*100)/100)
       $('#up').css('background-color', bgColor)
 
-      $('#mouthRatio').val(Math.round(En*100)/100)
+      $('#mouthRatio').val(Math.round(EN*100)/100)
       $('#mouthRatio').css('background-color', bgColor)
-      if(EnAvg>threshold)
-        return false
-      else
-        return true
+      //if(EnAvg>threshold)
+      //  return false
+      //else
+      return true
     
     }
     async function run() {
