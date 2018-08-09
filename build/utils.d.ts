@@ -1,4 +1,4 @@
-import * as tf from '@tensorflow/tfjs-core';
+import * as tf from '@tensorflow/tfjs';
 import { Dimensions } from './types';
 export declare function isFloat(num: number): boolean;
 export declare function isEven(num: number): boolean;

@@ -1,4 +1,5 @@
-import * as tf from '@tensorflow/tfjs-core';
+//import * as tf from '@tensorflow/tfjs-core';
+import * as tf from '@tensorflow/tfjs';
 
 export function isTensor(tensor: any, dim: number) {
   return tensor instanceof tf.Tensor && tensor.shape.length === dim

@@ -1,4 +1,5 @@
-import * as tf from '@tensorflow/tfjs-core';
+//import * as tf from '@tensorflow/tfjs-core';
+import * as tf from '@tensorflow/tfjs';
 
 export type ConvParams = {
   filters: tf.Tensor4D

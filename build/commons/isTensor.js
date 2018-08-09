@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var tf = require("@tensorflow/tfjs-core");
+//import * as tf from '@tensorflow/tfjs-core';
+var tf = require("@tensorflow/tfjs");
 function isTensor(tensor, dim) {
     return tensor instanceof tf.Tensor && tensor.shape.length === dim;
 }

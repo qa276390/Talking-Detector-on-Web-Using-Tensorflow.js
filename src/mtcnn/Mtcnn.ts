@@ -1,4 +1,5 @@
-import * as tf from '@tensorflow/tfjs-core';
+//import * as tf from '@tensorflow/tfjs-core';
+import * as tf from '@tensorflow/tfjs';
 
 import { NeuralNetwork } from '../commons/NeuralNetwork';
 import { FaceDetection } from '../FaceDetection';

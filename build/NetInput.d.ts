@@ -1,4 +1,4 @@
-import * as tf from '@tensorflow/tfjs-core';
+import * as tf from '@tensorflow/tfjs';
 import { Point } from './Point';
 import { TResolvedNetInput } from './types';
 export declare class NetInput {

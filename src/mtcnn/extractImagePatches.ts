@@ -1,4 +1,5 @@
-import * as tf from '@tensorflow/tfjs-core';
+//import * as tf from '@tensorflow/tfjs-core';
+import * as tf from '@tensorflow/tfjs';
 
 import { Dimensions } from '../types';
 import { createCanvas, getContext2dOrThrow } from '../utils';

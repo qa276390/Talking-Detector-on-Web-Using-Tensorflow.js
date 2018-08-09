@@ -1,4 +1,5 @@
-import * as tf from '@tensorflow/tfjs-core';
+//import * as tf from '@tensorflow/tfjs-core';
+import * as tf from '@tensorflow/tfjs';
 
 import { isTensor4D } from './commons/isTensor';
 import { Dimensions } from './types';

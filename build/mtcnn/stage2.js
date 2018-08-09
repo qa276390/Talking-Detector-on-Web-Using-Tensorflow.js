@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = require("tslib");
-var tf = require("@tensorflow/tfjs-core");
+//import * as tf from '@tensorflow/tfjs-core';
+var tf = require("@tensorflow/tfjs");
 var BoundingBox_1 = require("./BoundingBox");
 var extractImagePatches_1 = require("./extractImagePatches");
 var nms_1 = require("./nms");

@@ -1,4 +1,5 @@
-import * as tf from '@tensorflow/tfjs-core';
+//import * as tf from '@tensorflow/tfjs-core';
+import * as tf from '@tensorflow/tfjs';
 
 import { disposeUnusedWeightTensors } from '../commons/disposeUnusedWeightTensors';
 import { extractWeightEntryFactory } from '../commons/extractWeightEntryFactory';

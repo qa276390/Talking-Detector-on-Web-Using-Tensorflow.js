@@ -1,4 +1,5 @@
-import * as tf from '@tensorflow/tfjs-core';
+//import * as tf from '@tensorflow/tfjs-core';
+import * as tf from '@tensorflow/tfjs';
 
 export function getModelUris(uri: string | undefined, defaultModelName: string) {
   const parts = (uri || '').split('/')

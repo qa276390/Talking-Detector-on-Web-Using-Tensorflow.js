@@ -1,4 +1,5 @@
-import * as tf from '@tensorflow/tfjs-core';
+//import * as tf from '@tensorflow/tfjs-core';
+import * as tf from '@tensorflow/tfjs';
 
 import { extractConvParamsFactory } from '../commons/extractConvParamsFactory';
 import { extractFCParamsFactory } from '../commons/extractFCParamsFactory';

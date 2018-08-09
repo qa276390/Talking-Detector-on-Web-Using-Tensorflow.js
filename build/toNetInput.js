@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = require("tslib");
+;
 var isMediaElement_1 = require("./commons/isMediaElement");
 var isTensor_1 = require("./commons/isTensor");
 var NetInput_1 = require("./NetInput");

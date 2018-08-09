@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var tf = require("@tensorflow/tfjs-core");
+//import * as tf from '@tensorflow/tfjs-core';
+var tf = require("@tensorflow/tfjs");
 var convLayer_1 = require("./convLayer");
 function residual(x, params) {
     var out = convLayer_1.conv(x, params.conv1);

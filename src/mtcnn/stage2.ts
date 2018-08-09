@@ -1,4 +1,5 @@
-import * as tf from '@tensorflow/tfjs-core';
+//import * as tf from '@tensorflow/tfjs-core';
+import * as tf from '@tensorflow/tfjs';
 
 import { BoundingBox } from './BoundingBox';
 import { extractImagePatches } from './extractImagePatches';

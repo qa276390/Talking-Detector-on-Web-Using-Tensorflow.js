@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var tf = require("@tensorflow/tfjs-core");
+//import * as tf from '@tensorflow/tfjs-core';
+var tf = require("@tensorflow/tfjs");
 var isTensor_1 = require("./commons/isTensor");
 var padToSquare_1 = require("./padToSquare");
 var Point_1 = require("./Point");

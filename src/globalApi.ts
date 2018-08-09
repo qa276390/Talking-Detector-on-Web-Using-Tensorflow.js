@@ -1,4 +1,5 @@
-import * as tf from '@tensorflow/tfjs-core';
+//import * as tf from '@tensorflow/tfjs-core';
+import * as tf from '@tensorflow/tfjs';
 
 import { allFacesFactory, allFacesMtcnnFactory } from './allFacesFactory';
 import { extractFaceTensors } from './extractFaceTensors';

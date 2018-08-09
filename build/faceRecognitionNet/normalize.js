@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var tf = require("@tensorflow/tfjs-core");
+//import * as tf from '@tensorflow/tfjs-core';
+var tf = require("@tensorflow/tfjs");
 function normalize(x) {
     return tf.tidy(function () {
         var avg_r = tf.fill(x.shape.slice(0, 3).concat([1]), 122.782);

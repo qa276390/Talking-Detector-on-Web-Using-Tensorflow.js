@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var tf = require("@tensorflow/tfjs-core");
+//import * as tf from '@tensorflow/tfjs-core';
+var tf = require("@tensorflow/tfjs");
 function getCenterCoordinatesAndSizesLayer(x) {
     var vec = tf.unstack(tf.transpose(x, [1, 0]));
     var sizes = [

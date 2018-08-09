@@ -3,6 +3,9 @@
 <head>
   <script src="face-api.js"></script>
   <script src="commons.js"></script>
+  <script src="controller_dataset.js"></script>
+  <script src="ui.js"></script>
+  <script src="webcam.js"></script>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.css">
   <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
@@ -20,14 +23,40 @@
     </div>
     <div class="row side-by-side">    
       
+      <div class="panel-row panel-row-top">
+
+        <div class="panel-cell panel-cell-left panel-cell-fill">
+          <p class="help-text">
+          Click to add the <br/>
+          current camera <br/>
+          view as an example <br/>
+          for that control
+          </p>
+        </div><!-- ./panel-cell -->
+
+        <div class="panel-cell panel-cell-center">
+          <div class="thumb-box">
+            <div class="thumb-box-outer">
+              <div class="thumb-box-inner">
+                <canvas class="thumb" width=224 height=224 id="up-thumb"></canvas>
+              </div>
+              <button class="record-button" id="up"/><span>Add Sample</span></button>
+            </div>
+            <p>
+              <span id="up-total">0</span> examples
+            </p>
+          </div>
+        </div><!-- ./panel-cell -->
+
+        <div class="panel-cell panel-cell-right panel-cell-fill">
+        </div><!-- ./panel-cell -->
+
+      </div><!-- /.panel-row -->
       <div class="row">
         <label for="en">Entropy:</label>
         <input disabled value="-" id="en" type="text" class="bold">
       </div>
-      <div class="row">
-        <label for="enavg">Avg.:</label>
-        <input disabled value="-" id="enavg" type="text" class="bold">
-      </div>
+     
       <button id="recButton"></button>
     </div>
     <div class="row side-by-side">
@@ -133,6 +162,12 @@
     let Enthr = 2
     let OFF = false
     let end_time = 0
+    let TRAIN = true
+    let mobilenet
+    let model
+    let label_time
+
+    const controllerDataset = new ControllerDataset(2)
 
     navigator.getUserMedia = ( navigator.getUserMedia ||
                        navigator.webkitGetUserMedia ||
@@ -281,21 +316,7 @@
       return Vectors
     }
 
-    function calculateLipsRatio(landmarksByFace){
-      lmkPos = landmarksByFace[0].getMouth()
-      lmkPosLE = landmarksByFace[0].getLeftEye()
-      lmkPosRE = landmarksByFace[0].getRightEye()
-      lmkPosN = landmarksByFace[0].getNose()
-      let eyed = Math.pow((lmkPosLE[3].x-lmkPosRE[0].x), 2) + Math.pow((lmkPosLE[3].y-lmkPosRE[0].y), 2)
-      let nosed = Math.pow((lmkPosN[3].x-lmkPosN[0].x), 2) + Math.pow((lmkPosN[3].y-lmkPosN[0].y), 2)
-      let avg = (eyed+nosed)/2.0
-      let Llips = (Math.pow((lmkPos[2].x - lmkPos[10].x),2) + Math.pow((lmkPos[2].y - lmkPos[10].y),2))
-      let Rlips = (Math.pow((lmkPos[4].x - lmkPos[8].x),2) + Math.pow((lmkPos[4].y - lmkPos[8].y),2))
-      let lipsd = (Llips + Rlips )/2.0
-      let LipsRatio = Math.pow(lipsd/avg, 0.5)
-      return LipsRatio
-    }
-
+   
     async function onPlay(videoEl) {
       if(videoEl.paused || videoEl.ended || !modelLoaded)
         return false
@@ -323,50 +344,76 @@
         flen = results.length
         for (i = 0; i<flen; i++)
         {locations.push(results[i].faceDetection)}
-        const faceTensors = (await faceapi.extractFaceTensors(videoEl, locations))
-        let landmarksByFace = await Promise.all(faceTensors.map(t => faceapi.detectLandmarks(t)))
-        //console.log(landmarksByFace)
-
-        // free memory for face image tensors after we computed their descriptors
-        faceTensors.forEach(t => t.dispose())
-
-        // shift and scale the face landmarks to the face image position in the canvas
-        landmarksByFace = landmarksByFace.map((landmarks, i) => {
-          const box = locations[i].forSize(width, height).getBox()
-          return landmarks.forSize(box.width, box.height).shift(box.x, box.y)
-        })
-        lmk68_time = new Date().getTime()
-        
-        //let nMouthPoint = normalizeMouth(landmarksByFace)
-        let nMouthPoint = super_normalizeMouth(landmarksByFace)
-        
-        
-        checktime = new Date().getTime()
-        if(checktime-end_time>1000){
-          while(!pointQ.isEmpty())
-          {pointQ.dequeue()}
-        }
-        
-        pointQ.enqueue(nMouthPoint)
-        
-        if(pointQ.getLength()>3){
-          pointQ.dequeue()
-        }
-    
-        if(pointQ.getLength()!=1 && EnSilent(pointQ, Enthr))
+        //const faceTensors = (await faceapi.extractFaceTensors(videoEl, locations))
+        const faceImgs = (await faceapi.extractFaces(videoEl, locations))
+        if(TRAIN)
         {
-          console.log('E*************Off**************E')
-          off()
+          let train_time = new Date().getTime()
+          if((train_time-label_time)/1000>30)
+          {
+            off()
+            label_time = train_time
+            console.log('over 30 sec')
+          }
+          label = OFF? 0:1
+          
+          console.log(faceImgs)
+          ilen = faceImgs.length
+          for(i=0;i<ilen;i++)
+          {
+            webcam = new Webcam(faceImgs[i]) 
+            img = webcam.capture()
+            img_resize = faceapi.tf.image.resizeBilinear(img, [224, 224])
+            controllerDataset.addExample(mobilenet.predict(img_resize), label)
+
+            drawThumb(img_resize, label);
+          }
         }
         else
         {
-          console.log('E*************On**************E')
-          on()
-        }
+          let landmarksByFace = await Promise.all(faceTensors.map(t => faceapi.detectLandmarks(t)))
+          //console.log(landmarksByFace)
 
-        let drawLines = false
-        faceapi.drawLandmarks(canvas, landmarksByFace, { lineWidth: drawLines ? 2 : 4, drawLines, color: 'blue' })
+          // free memory for face image tensors after we computed their descriptors
+          faceTensors.forEach(t => t.dispose())
+
+          // shift and scale the face landmarks to the face image position in the canvas
+          landmarksByFace = landmarksByFace.map((landmarks, i) => {
+            const box = locations[i].forSize(width, height).getBox()
+            return landmarks.forSize(box.width, box.height).shift(box.x, box.y)
+          })
+          lmk68_time = new Date().getTime()
+          
+          //let nMouthPoint = normalizeMouth(landmarksByFace)
+          let nMouthPoint = super_normalizeMouth(landmarksByFace)
+          
+          
+          checktime = new Date().getTime()
+          if(checktime-end_time>1000){
+            while(!pointQ.isEmpty())
+            {pointQ.dequeue()}
+          }
+          
+          pointQ.enqueue(nMouthPoint)
+          
+          if(pointQ.getLength()>3){
+            pointQ.dequeue()
+          }
+      
+          if(pointQ.getLength()!=1 && EnSilent(pointQ, Enthr))
+          {
+            console.log('E*************Off**************E')
+            off()
+          }
+          else
+          {
+            console.log('E*************On**************E')
+            on()
+          }
         
+          let drawLines = false
+          faceapi.drawLandmarks(canvas, landmarksByFace, { lineWidth: drawLines ? 2 : 4, drawLines, color: 'blue' })
+        }
         if (results) {
           results.forEach(({ faceDetection, faceLandmarks }) => {
             if (faceDetection.score < minConfidence) {
@@ -457,8 +504,9 @@
     }
     async function run() {
       await faceapi.loadMtcnnModel('/')
-      //modelLoaded = true
       await faceapi.loadFaceLandmarkModel('/')
+      mobilenet = await loadMobilenet();
+
       modelLoaded = true
     
 
@@ -468,6 +516,9 @@
         stream => videoEl.srcObject = stream,
         err => console.error(err)
       )
+
+       
+
       $('#loader').hide()
       
       $('#recButton').addClass("Rec");
@@ -481,7 +532,9 @@
           $('#recButton').removeClass("Rec");
           $('#recButton').addClass("notRec");
         }
-      });	
+      });
+      label_time = new Date().getTime()
+      on()	
      
     }
 
@@ -499,6 +552,17 @@
       this.peek=function(){return 0<a.length?a[b]:void 0};
       this.getitem=function(i){if(i<a.length){return a[i]}};
     }
+    
+    async function loadMobilenet() {
+      const mobilenet = await faceapi.tf.loadModel(
+          'https://storage.googleapis.com/tfjs-models/tfjs/mobilenet_v1_0.25_224/model.json');
+
+      // Return a model that outputs an internal activation.
+      const layer = mobilenet.getLayer('conv_pw_13_relu');
+      //console.log(tf.shape(layer));
+      return faceapi.tf.model({inputs: mobilenet.inputs, outputs: layer.output});
+    }
+
   </script>
 </body>
 </html>

@@ -1,4 +1,5 @@
-import * as tf from '@tensorflow/tfjs-core';
+//import * as tf from '@tensorflow/tfjs-core';
+import * as tf from '@tensorflow/tfjs';
 
 import { extractWeightsFactory } from '../commons/extractWeightsFactory';
 import { ConvParams, ExtractWeightsFunction, ParamMapping } from '../commons/types';

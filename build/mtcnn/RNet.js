@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var tf = require("@tensorflow/tfjs-core");
+//import * as tf from '@tensorflow/tfjs-core';
+var tf = require("@tensorflow/tfjs");
 var fullyConnectedLayer_1 = require("../faceLandmarkNet/fullyConnectedLayer");
 var prelu_1 = require("./prelu");
 var sharedLayers_1 = require("./sharedLayers");

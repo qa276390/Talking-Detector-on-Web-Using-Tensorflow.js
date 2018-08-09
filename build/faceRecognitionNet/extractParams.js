@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var tf = require("@tensorflow/tfjs-core");
+//import * as tf from '@tensorflow/tfjs-core';
+var tf = require("@tensorflow/tfjs");
 var extractWeightsFactory_1 = require("../commons/extractWeightsFactory");
 var utils_1 = require("../utils");
 function extractorsFactory(extractWeights, paramMappings) {

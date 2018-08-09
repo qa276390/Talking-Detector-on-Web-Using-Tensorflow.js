@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var tf = require("@tensorflow/tfjs-core");
+//import * as tf from '@tensorflow/tfjs-core';
+var tf = require("@tensorflow/tfjs");
 var pointwiseConvLayer_1 = require("./pointwiseConvLayer");
 var epsilon = 0.0010000000474974513;
 function depthwiseConvLayer(x, params, strides) {

@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = require("tslib");
-var tf = require("@tensorflow/tfjs-core");
+//import * as tf from '@tensorflow/tfjs-core';
+var tf = require("@tensorflow/tfjs");
 var NeuralNetwork_1 = require("../commons/NeuralNetwork");
 var FaceDetection_1 = require("../FaceDetection");
 var Rect_1 = require("../Rect");

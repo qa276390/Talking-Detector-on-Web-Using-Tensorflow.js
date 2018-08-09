@@ -1,4 +1,5 @@
-import * as tf from '@tensorflow/tfjs-core';
+//import * as tf from '@tensorflow/tfjs-core';
+import * as tf from '@tensorflow/tfjs';
 
 import { pointwiseConvLayer } from './pointwiseConvLayer';
 import { MobileNetV1 } from './types';

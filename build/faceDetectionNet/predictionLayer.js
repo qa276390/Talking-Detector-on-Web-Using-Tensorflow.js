@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var tf = require("@tensorflow/tfjs-core");
+//import * as tf from '@tensorflow/tfjs-core';
+var tf = require("@tensorflow/tfjs");
 var boxPredictionLayer_1 = require("./boxPredictionLayer");
 var pointwiseConvLayer_1 = require("./pointwiseConvLayer");
 function predictionLayer(x, conv11, params) {

@@ -1,4 +1,5 @@
-import * as tf from '@tensorflow/tfjs-core';
+//import * as tf from '@tensorflow/tfjs-core';
+import * as tf from '@tensorflow/tfjs';
 
 export function normalize(x: tf.Tensor4D): tf.Tensor4D {
   return tf.tidy(() => {

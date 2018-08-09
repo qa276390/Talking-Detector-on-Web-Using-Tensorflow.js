@@ -1,4 +1,5 @@
-import * as tf from '@tensorflow/tfjs-core';
+//import * as tf from '@tensorflow/tfjs-core';
+import * as tf from '@tensorflow/tfjs';
 
 import { ConvParams, FCParams } from '../commons/types';
 import { FaceDetection } from '../FaceDetection';

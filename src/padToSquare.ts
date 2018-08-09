@@ -1,5 +1,5 @@
-import * as tf from '@tensorflow/tfjs-core';
-
+//import * as tf from '@tensorflow/tfjs-core';
+import * as tf from '@tensorflow/tfjs';
 /**
  * Pads the smaller dimension of an image tensor with zeros, such that width === height.
  *

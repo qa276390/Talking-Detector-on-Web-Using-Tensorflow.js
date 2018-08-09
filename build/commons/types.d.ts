@@ -1,4 +1,4 @@
-import * as tf from '@tensorflow/tfjs-core';
+import * as tf from '@tensorflow/tfjs';
 export declare type ConvParams = {
     filters: tf.Tensor4D;
     bias: tf.Tensor1D;
