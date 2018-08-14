@@ -27,10 +27,7 @@
 
         <div class="panel-cell panel-cell-left panel-cell-fill">
           <p class="help-text">
-          Click to add the <br/>
-          current camera <br/>
-          view as an example <br/>
-          for that control
+          Adding Sample <br/>
           </p>
         </div><!-- ./panel-cell -->
 
@@ -44,6 +41,32 @@
             </div>
             <p>
               <span id="up-total">0</span> examples
+            </p>
+          </div>
+        </div><!-- ./panel-cell -->
+
+        <div class="panel-cell panel-cell-right panel-cell-fill">
+        </div><!-- ./panel-cell -->
+
+      </div><!-- /.panel-row -->
+      <div class="panel-row panel-row-top">
+
+        <div class="panel-cell panel-cell-left panel-cell-fill">
+          <p class="help-text">
+          Adding Sample <br/>
+          </p>
+        </div><!-- ./panel-cell -->
+
+        <div class="panel-cell panel-cell-center">
+          <div class="thumb-box">
+            <div class="thumb-box-outer">
+              <div class="thumb-box-inner">
+                <canvas class="thumb" width=224 height=224 id="down-thumb"></canvas>
+              </div>
+              <button class="record-button" id="down"/><span>Add Sample</span></button>
+            </div>
+            <p>
+              <span id="down-total">0</span> examples
             </p>
           </div>
         </div><!-- ./panel-cell -->
@@ -139,6 +162,94 @@
         <input disabled value="-" id="down" type="text" class="bold">
       </div>
     </div>
+      
+    <div class="controller-panels" id="controller">
+
+      <div class="panel training-panel">
+  
+        <!-- Big buttons. -->
+        <div class="panel-row big-buttons">
+          <button id="train">
+            <img width="66" height="66" src="./images/button.svg" />
+            <span id="train-status">TRAIN MODEL</span>
+          </button>
+          <button id="predict">
+            <img width="66" height="66" src="./images/button.svg" />
+            <span>PLAY</span>
+          </button>
+        </div><!-- /.panel-row -->
+  
+        <div class="panel-row params-webcam-row">
+  
+          <!-- Hyper params. -->
+          <div class="hyper-params">
+  
+            <!-- Learning rate -->
+            <div class="dropdown">
+              <label>Learning rate</label>
+              <div class="select">
+                <select id="learningRate">
+                  <option value="0.00001">0.00001</option>
+                  <option selected value="0.0001">0.0001</option>
+                  <option value="0.01">0.001</option>
+                  <option value="0.03">0.003</option>
+                </select>
+              </div>
+            </div>
+  
+            <!-- Batch size -->
+            <div class="dropdown">
+              <label>Batch size</label>
+              <div class="select">
+                <select id="batchSizeFraction">
+                  <option value="0.05">0.05</option>
+                  <option value="0.1">0.1</option>
+                  <option selected value="0.4">0.4</option>
+                  <option value="1">1</option>
+                </select>
+              </div>
+            </div>
+  
+            <!-- Epochs -->
+            <div class="dropdown">
+              <label>Epochs</label>
+              <div class="select">
+                <select id="epochs">
+                  <option value="10">10</option>
+                  <option selected value="20">20</option>
+                  <option value="40">40</option>
+                </select>
+              </div>
+            </div>
+  
+            <!-- Hidden units -->
+            <div class="dropdown">
+              <label>Hidden units</label>
+              <div class="select">
+                <select id="dense-units">
+                  <option value="10">10</option>
+                  <option selected value="100">100</option>
+                  <option value="200">200</option>
+                </select>
+              </div>
+            </div>
+  
+          </div><!-- /.hyper-params -->
+  
+          <div class="webcam-box-outer">
+            <div class="webcam-box-inner">
+              <video autoplay playsinline muted id="webcam" width="224" height="224"></video>
+            </div>
+          </div>
+  
+        </div><!-- /.panel-row -->
+  
+      </div><!-- /.panel -->
+  
+      
+  
+    </div><!-- /#controller -->
+    
   </div>
 
   <script>
@@ -166,6 +277,8 @@
     let mobilenet
     let model
     let label_time
+    let NUM_CLASSES = 2
+    let videoEl
 
     const controllerDataset = new ControllerDataset(2)
 
@@ -317,7 +430,7 @@
     }
 
    
-    async function onPlay(videoEl) {
+    async function onPlay() {
       if(videoEl.paused || videoEl.ended || !modelLoaded)
         return false
 
@@ -333,7 +446,8 @@
         minFaceSize
       }
       //const { results, stats } = await faceapi.nets.mtcnn.forwardWithStats(videoEl, mtcnnParams)
-      const results = await faceapi.mtcnn(videoEl, mtcnnParams)
+      let img = faceapi.createCanvasFromMedia(videoEl)
+      const results = await faceapi.mtcnn(img, mtcnnParams)
       console.log(results)
       
       let mtcnn_time = new Date().getTime()
@@ -343,13 +457,27 @@
         locations = []
         flen = results.length
         for (i = 0; i<flen; i++)
-        {locations.push(results[i].faceDetection)}
+        {
+          results[i].faceDetection.box.height = results[i].faceDetection.box.height/2
+          results[i].faceDetection.box.y = results[i].faceDetection.box.y + results[i].faceDetection.box.height
+          locations.push(results[i].faceDetection)
+        }
         //const faceTensors = (await faceapi.extractFaceTensors(videoEl, locations))
-        const faceImgs = (await faceapi.extractFaces(videoEl, locations))
+        const faceImgs = (await faceapi.extractFaces(img, locations))
+        console.log('faceImgs:')
+        console.log(faceImgs)
+        console.log('locations:')
+        console.log(locations)
         if(TRAIN)
         {
           let train_time = new Date().getTime()
-          if((train_time-label_time)/1000>30)
+          if((train_time-label_time)/1000>30 && !OFF)
+          {
+            off()
+            label_time = train_time
+            console.log('over 30 sec')
+          }
+          else if((train_time-label_time)/1000>30 && OFF)
           {
             off()
             label_time = train_time
@@ -362,8 +490,10 @@
           for(i=0;i<ilen;i++)
           {
             webcam = new Webcam(faceImgs[i]) 
-            img = webcam.capture()
-            img_resize = faceapi.tf.image.resizeBilinear(img, [224, 224])
+            IMG = webcam.capture()
+            console.log(IMG)
+            img_resize = faceapi.tf.image.resizeBilinear(IMG, [224, 224])
+            console.log(img_resize)
             controllerDataset.addExample(mobilenet.predict(img_resize), label)
 
             drawThumb(img_resize, label);
@@ -371,21 +501,26 @@
         }
         else
         {
-          let landmarksByFace = await Promise.all(faceTensors.map(t => faceapi.detectLandmarks(t)))
-          //console.log(landmarksByFace)
+          let label = 1
+          ilen = faceImgs.length
+          for(i=0;i<ilen;i++)
+          {
+            webcam = new Webcam(faceImgs[i]) 
+            IMG = webcam.capture()
+            img_resize = faceapi.tf.image.resizeBilinear(IMG, [224, 224])
+            const activation = mobilenet.predict(img_resize);
+            const predictions = model.predict(activation);
+            const predictedClass = predictions.as1D().argMax();
+            label = (await predictedClass.data())[0];
+            predictedClass.dispose();
 
-          // free memory for face image tensors after we computed their descriptors
-          faceTensors.forEach(t => t.dispose())
-
-          // shift and scale the face landmarks to the face image position in the canvas
-          landmarksByFace = landmarksByFace.map((landmarks, i) => {
-            const box = locations[i].forSize(width, height).getBox()
-            return landmarks.forSize(box.width, box.height).shift(box.x, box.y)
-          })
+            console.log(predictedClass)
+            console.log(label)
+          }
           lmk68_time = new Date().getTime()
           
           //let nMouthPoint = normalizeMouth(landmarksByFace)
-          let nMouthPoint = super_normalizeMouth(landmarksByFace)
+       
           
           
           checktime = new Date().getTime()
@@ -394,13 +529,14 @@
             {pointQ.dequeue()}
           }
           
-          pointQ.enqueue(nMouthPoint)
+          pointQ.enqueue(label)
           
           if(pointQ.getLength()>3){
             pointQ.dequeue()
           }
       
-          if(pointQ.getLength()!=1 && EnSilent(pointQ, Enthr))
+          //if(pointQ.getLength()!=1 && LabelSilent(pointQ))
+          if(label==0)
           {
             console.log('E*************Off**************E')
             off()
@@ -411,10 +547,18 @@
             on()
           }
         
-          let drawLines = false
-          faceapi.drawLandmarks(canvas, landmarksByFace, { lineWidth: drawLines ? 2 : 4, drawLines, color: 'blue' })
+          //let drawLines = false
+          //faceapi.drawLandmarks(canvas, landmarksByFace, { lineWidth: drawLines ? 2 : 4, drawLines, color: 'blue' })
         }
         if (results) {
+
+           for (i = 0; i<flen; i++)
+          {
+            results[i].faceDetection.box.y = results[i].faceDetection.box.y - results[i].faceDetection.box.height
+            results[i].faceDetection.box.height = results[i].faceDetection.box.height*2
+          
+          }
+
           results.forEach(({ faceDetection, faceLandmarks }) => {
             if (faceDetection.score < minConfidence) {
               return
@@ -424,8 +568,8 @@
           })
         }
         end_time = new Date().getTime();
-      }else{
-        console.log('E*************Off**************E')
+      }else if(!TRAIN){
+        console.log('No Detect')
         off()
       }
      
@@ -454,53 +598,18 @@
         OFF = false
     }
   
-    function EnSilent(Q, threshold){
+    function LabelSilent(Q, threshold){
       let i, j, t, tf, EN = 0
-      let EnSum, Entmp, Enavg = 0
       let Qlen = Q.getLength()
 
-      t = Q.getitem(0)
-      if(true)
+      for(j = 0; j<Qlen;j++)
       {
-        //if rec is off, any "entropy > thr" than turn it on
-        for(j = 1; j<Qlen;j++)
-        {
-          tf = Q.getitem(j)
-          ENtmp = calEntropy(calculateVectors(t, tf))
-          if(j==1){
-            EN = ENtmp
-            $('#en').val(Math.round(EN*100)/100)
-            $('#en').css('background-color', bgColor)
-          }
-          if(ENtmp>threshold)
-            return false
-        }
-      }
-      else{
-        //if rec is on, "avg entropy < thr" turn it off
-        for(j = 1; j<Qlen;j++)
-        {
-          tf = Q.getitem(j)
-          if(j==1){
-            EN = calEntropy(calculateVectors(t, tf))
-            EnSum += EN
-          }else{
-            EnSum += calEntropy(calculateVectors(t, tf))
-         }
-        }
-        EnAvg = EnSum/(Qlen-1)
-        $('#enavg').val(Math.round(EnAvg*100)/100)
-        $('#enavg').css('background-color', bgColor)
-        $('#en').val(Math.round(EN*100)/100)
-        $('#en').css('background-color', bgColor)
-        if(EnAvg>threshold)
+        tf = Q.getitem(j)
+        if(tf==1){
           return false
-        else
-          return true
+        }
       }
-
       return true
-    
     }
     async function run() {
       await faceapi.loadMtcnnModel('/')
@@ -510,7 +619,10 @@
       modelLoaded = true
     
 
-      const videoEl = $('#inputVideo').get(0)
+      //const videoEl = $('#inputVideo').get(0)
+      videoEl = $('#inputVideo').get(0)
+      init()
+
       navigator.getUserMedia(
         { video: {} },
         stream => videoEl.srcObject = stream,
@@ -562,7 +674,85 @@
       //console.log(tf.shape(layer));
       return faceapi.tf.model({inputs: mobilenet.inputs, outputs: layer.output});
     }
+    /**
+ * Sets up and trains the classifier.
+ */
+  async function train() {
+    if (controllerDataset.xs == null) {
+      throw new Error('Add some examples before training!');
+    }
 
+    // Creates a 2-layer fully connected model. By creating a separate model,
+    // rather than adding layers to the mobilenet model, we "freeze" the weights
+    // of the mobilenet model, and only train weights from the new model.
+    model = faceapi.tf.sequential({
+      layers: [
+        // Flattens the input to a vector so we can use it in a dense layer. While
+        // technically a layer, this only performs a reshape (and has no training
+        // parameters).
+        faceapi.tf.layers.flatten({inputShape: [7, 7, 256]}),
+        // Layer 1
+        faceapi.tf.layers.dense({
+          units: getDenseUnits(),
+          activation: 'relu',
+          kernelInitializer: 'varianceScaling',
+          useBias: true
+        }),
+        // Layer 2. The number of units of the last layer should correspond
+        // to the number of classes we want to predict.
+        faceapi.tf.layers.dense({
+          units: NUM_CLASSES,
+          kernelInitializer: 'varianceScaling',
+          useBias: false,
+          activation: 'softmax'
+        })
+      ]
+    });
+
+    // Creates the optimizers which drives training of the model.
+    const optimizer = faceapi.tf.train.adam(getLearningRate());
+    // We use categoricalCrossentropy which is the loss function we use for
+    // categorical classification which measures the error between our predicted
+    // probability distribution over classes (probability that an input is of each
+    // class), versus the label (100% probability in the true class)>
+    model.compile({optimizer: optimizer, loss: 'categoricalCrossentropy'});
+
+    // We parameterize batch size as a fraction of the entire dataset because the
+    // number of examples that are collected depends on how many examples the user
+    // collects. This allows us to have a flexible batch size.
+    const batchSize =
+        Math.floor(controllerDataset.xs.shape[0] * getBatchSizeFraction());
+    if (!(batchSize > 0)) {
+      throw new Error(
+          `Batch size is 0 or NaN. Please choose a non-zero fraction.`);
+    }
+
+    // Train the model! Model.fit() will shuffle xs & ys so we don't have to.
+    model.fit(controllerDataset.xs, controllerDataset.ys, {
+      batchSize,
+      epochs: getEpochs(),
+      callbacks: {
+        onBatchEnd: async (batch, logs) => {
+          trainStatus('Loss: ' + logs.loss.toFixed(5));
+          await faceapi.tf.nextFrame();
+        }
+      }
+    });
+  }
+  document.getElementById('train').addEventListener('click', async () => {
+  trainStatus('Training...');
+  await faceapi.tf.nextFrame();
+  await faceapi.tf.nextFrame();
+  isPredicting = false;
+  train();
+});
+document.getElementById('predict').addEventListener('click', () => {
+  //startPacman();
+  //isPredicting = true;
+  //predict();
+  TRAIN = false
+  onPlay()
+});
   </script>
 </body>
 </html>

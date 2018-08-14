@@ -21,26 +21,38 @@ const CONTROLS = ['up', 'down', 'left', 'right'];
 const CONTROL_CODES = [38, 40, 37, 39];
 
 function init() {
-  document.getElementById('controller').style.display = '';
-  statusElement.style.display = 'none';
+  //document.getElementById('controller').style.display = '';
+  //statusElement.style.display = 'none';
+  
+  trainStatusElement = document.getElementById('train-status');
+  // Set hyper params from UI values.
+  
+  learningRateElement = document.getElementById('learningRate')
+  
+  batchSizeFractionElement = document.getElementById('batchSizeFraction');
+  epochsElement = document.getElementById('epochs');
+  denseUnitsElement = document.getElementById('dense-units');
+  statusElement = document.getElementById('status');
+  
+  console.log(trainStatusElement)
 }
-/*
-const trainStatusElement = document.getElementById('train-status');
+
+let trainStatusElement = document.getElementById('train-status');
 
 // Set hyper params from UI values.
-const learningRateElement = document.getElementById('learningRate');
+let learningRateElement = document.getElementById('learningRate');
 const getLearningRate = () => +learningRateElement.value;
 
-const batchSizeFractionElement = document.getElementById('batchSizeFraction');
+let batchSizeFractionElement = document.getElementById('batchSizeFraction');
 const getBatchSizeFraction = () => +batchSizeFractionElement.value;
 
-const epochsElement = document.getElementById('epochs');
+let epochsElement = document.getElementById('epochs');
 const getEpochs = () => +epochsElement.value;
 
-const denseUnitsElement = document.getElementById('dense-units');
+let denseUnitsElement = document.getElementById('dense-units');
 const getDenseUnits = () => +denseUnitsElement.value;
-const statusElement = document.getElementById('status');
-*/
+let statusElement = document.getElementById('status');
+
 function startPacman() {
   google.pacman.startGameplay();
 }
@@ -68,8 +80,8 @@ let mouseDown = false;
 const totals = [0, 0, 0, 0];
 
 const upButton = document.getElementById('up');
-/*
 const downButton = document.getElementById('down');
+/*
 const leftButton = document.getElementById('left');
 const rightButton = document.getElementById('right');
 */
@@ -89,9 +101,10 @@ async function handler(label) {
   document.body.removeAttribute('data-active');
 }
 
+/*
 upButton.addEventListener('mousedown', () => handler(0));
 upButton.addEventListener('mouseup', () => mouseDown = false);
-/*
+
 downButton.addEventListener('mousedown', () => handler(1));
 downButton.addEventListener('mouseup', () => mouseDown = false);
 
@@ -104,6 +117,16 @@ rightButton.addEventListener('mouseup', () => mouseDown = false);
 function drawThumb(img, label) {
   if (thumbDisplayed[label] == null) {
     const thumbCanvas = document.getElementById(CONTROLS[label] + '-thumb');
+    //const thumbCanvas = document.getElementById('up-thumb');
+    const className = CONTROLS[label];
+    const total = document.getElementById(className + '-total');
+    document.body.setAttribute('data-active', CONTROLS[label]);
+    total.innerText = totals[label]++;
+    //$(className + '-total').val(totals[label]++)
+    console.log(totals)
+    document.body.removeAttribute('data-active');
+
+    //
     draw(img, thumbCanvas);
   }
 }
