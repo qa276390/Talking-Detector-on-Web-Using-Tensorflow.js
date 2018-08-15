@@ -109,7 +109,7 @@
 /*###### from Pacman  #######*/
 
 html, body {
-  background: #f0efef;
+  background: #d4d4d4;
   font-family: 'Roboto', sans-serif;
   margin: 0;
   padding: 0;
@@ -189,6 +189,7 @@ header b {
 }
 
 /** Controls. **/
+
 .controller-panels {
   display: flex;
   flex-direction: row;
@@ -202,13 +203,12 @@ header b {
   flex-shrink: 0;
 }
 .panel:first-child {
-  border-right: 1px dashed #565656;
   padding: 0 22px 0 13px;
   width: 396px;
 }
 .panel:last-child {
   padding: 0 9px 0 22px;
-  width: 353px;
+  width: 430px;
 }
 .panel-row {
   display: flex;
@@ -225,6 +225,7 @@ header b {
 .panel-cell-fill {
   flex-grow: 1;
 }
+
 .panel-cell p {
   color: #8b8b8b;
   font-size: 10px;
@@ -241,7 +242,7 @@ header b {
   padding: 0;
 }
 #train-status {
-  width: 124px;
+  width: 135px;
 }
 
 /** Training panel. **/
@@ -320,13 +321,14 @@ header b {
   border: none;
   border-bottom: solid 1px #313131;
   border-radius: 0;
-  color: #c9c9c9;
+  color: #080808;
   display: block;
   font-size: 12px;
   outline: none;
   padding: 6px 0;
   width: 100%;
 }
+/*
 .dropdown .select::after {
   content: "arrow_drop_down";
   color: #999;
@@ -346,9 +348,9 @@ header b {
   top: 6px;
   pointer-events: none;
 }
-
+*/
 /** Joystick panel. **/
-/*
+
 .joystick-panel {
   margin-top: 13px;
 }
@@ -372,6 +374,7 @@ header b {
 .panel-row-middle .panel-cell {
   height: 132px;
 }
+/******************/
 .thumb-box {
   display: inline-block;
 }
@@ -403,10 +406,12 @@ header b {
   overflow: hidden;
   width: 66px;
 }
+
 .thumb {
   height: 66px;
   transform: scaleX(-1);
 }
+/*
 .thumb-box-outer .record-button {
   height: 100%;
   left: 0;
@@ -414,6 +419,7 @@ header b {
   top: 0;
   width: 100%;
 }
+*/
 .thumb-box-outer .record-button span {
   background: #111;
   border: 1px solid #585858;
@@ -427,7 +433,7 @@ header b {
   right: 9px;
   opacity: 0.5;
 }
-*/
+
 /** Footer. **/
 #copyright {
   color: #f8f8f8;

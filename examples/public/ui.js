@@ -33,7 +33,15 @@ function init() {
   epochsElement = document.getElementById('epochs');
   denseUnitsElement = document.getElementById('dense-units');
   statusElement = document.getElementById('status');
+
+  upButton = document.getElementById('up');
+  downButton = document.getElementById('down');
   
+  upButton.addEventListener('mousedown', () => handler(0));
+  upButton.addEventListener('mouseup', () => mouseDown = false);
+
+  downButton.addEventListener('mousedown', () => handler(1));
+  downButton.addEventListener('mouseup', () => mouseDown = false);
   console.log(trainStatusElement)
 }
 
@@ -79,8 +87,8 @@ function setExampleHandler(handler) {
 let mouseDown = false;
 const totals = [0, 0, 0, 0];
 
-const upButton = document.getElementById('up');
-const downButton = document.getElementById('down');
+let upButton = document.getElementById('up');
+let downButton = document.getElementById('down');
 /*
 const leftButton = document.getElementById('left');
 const rightButton = document.getElementById('right');
@@ -101,13 +109,9 @@ async function handler(label) {
   document.body.removeAttribute('data-active');
 }
 
+
+
 /*
-upButton.addEventListener('mousedown', () => handler(0));
-upButton.addEventListener('mouseup', () => mouseDown = false);
-
-downButton.addEventListener('mousedown', () => handler(1));
-downButton.addEventListener('mouseup', () => mouseDown = false);
-
 leftButton.addEventListener('mousedown', () => handler(2));
 leftButton.addEventListener('mouseup', () => mouseDown = false);
 
@@ -117,16 +121,15 @@ rightButton.addEventListener('mouseup', () => mouseDown = false);
 function drawThumb(img, label) {
   if (thumbDisplayed[label] == null) {
     const thumbCanvas = document.getElementById(CONTROLS[label] + '-thumb');
-    //const thumbCanvas = document.getElementById('up-thumb');
+    console.log('Drawing!')
+    //Counting
+    /*
     const className = CONTROLS[label];
     const total = document.getElementById(className + '-total');
     document.body.setAttribute('data-active', CONTROLS[label]);
     total.innerText = totals[label]++;
-    //$(className + '-total').val(totals[label]++)
-    console.log(totals)
     document.body.removeAttribute('data-active');
-
-    //
+    */
     draw(img, thumbCanvas);
   }
 }
