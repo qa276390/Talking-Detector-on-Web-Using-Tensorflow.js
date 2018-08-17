@@ -17,17 +17,15 @@
 
 ### Live Face Detection
 
-**SSD Mobilenet v1**
+**MTCNN**
 
 ![preview_video-facedetection](https://user-images.githubusercontent.com/31125521/41238649-bbf10046-6d96-11e8-9041-1de46c6adccd.jpg)
 
-**MTCNN**
+
 
 ![mtcnn-preview](https://user-images.githubusercontent.com/31125521/42756818-0a41edaa-88fe-11e8-9033-8cd141b0fa09.gif)
 
-### Face Alignment
 
-![preview_face_alignment](https://user-images.githubusercontent.com/31125521/41526994-1a690818-72e6-11e8-8f3c-d2cf31fe517b.jpg)
 
 <a name="running-the-examples"></a>
 
