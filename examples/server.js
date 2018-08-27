@@ -7,6 +7,84 @@ const app = express()
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
+//****************************//
+var ID;
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
+var fs = require("fs")
+var multer  = require('multer')
+
+//app.use(multer({ dest: path.join(__dirname, './uploads')}).any());
+app.post('/file_upload', function (req, res) {
+  
+  var event = new Date(Date.now());
+  str = event.toString().split(" ")
+  time = str[1]
+  for(i=2;i<=4;i++)
+  { time = time +'_' + str[i]}
+  var date = time.replace(/:/g,"_");
+  var folder = date+"_"+req.files[0].filename
+  ID = folder
+  var dir = __dirname + "/views/models/"+ folder;
+  if (!fs.existsSync(dir)){
+    fs.mkdirSync(dir);
+  }
+  
+  
+  var fname = req.files[0].fieldname;
+  var file = dir + "/" + req.files[0].fieldname;
+
+  fs.readFile( req.files[0].path, function (err, data) {
+    fs.writeFile(file, data, function (err) {
+        if( err ){
+          console.log( err );
+          }else{
+              response = {
+                message:'File uploaded successfully',
+                filename:fname
+              };
+          }
+        console.log( response );
+        //res.send( JSON.stringify( response ) );
+        res.end( JSON.stringify( response ) );
+        //res.end( { response });
+    });
+  });
+
+  
+  var fname1 = req.files[1].fieldname;
+  var file1 = dir + "/" + req.files[1].fieldname;
+
+  fs.readFile( req.files[1].path, function (err, data) {
+    fs.writeFile(file1, data, function (err) {
+        if( err ){
+          console.log( err );
+          }else{
+              response = {
+                message:'File uploaded successfully',
+                filename:fname1
+              };
+          }
+        console.log( response );
+        res.end( JSON.stringify( response ) );  
+    });
+  });
+  
+})
+
+app.get('/list_user', function (req, res) {
+  
+  var dirs = fs.readdirSync('./views/models/');
+  console.log("/list_user GET 请求");
+  res.send(JSON.stringify(dirs) );
+})
+
+//****************************//
+
 const viewsDir = path.join(__dirname, 'views')
 app.use(express.static(viewsDir))
 app.use(express.static(path.join(__dirname, './public')))
@@ -15,6 +93,7 @@ app.use(express.static(path.join(__dirname, '../dist')))
 app.use(express.static(path.join(__dirname, './node_modules/axios/dist')))
 
 app.get('/', (req, res) => res.redirect('/mtcnn_face_detection_webcam'))
+/*
 app.get('/face_detection', (req, res) => res.sendFile(path.join(viewsDir, 'faceDetection.html')))
 app.get('/face_detection_video', (req, res) => res.sendFile(path.join(viewsDir, 'faceDetectionVideo.html')))
 app.get('/face_recognition', (req, res) => res.sendFile(path.join(viewsDir, 'faceRecognition.html')))
@@ -26,12 +105,14 @@ app.get('/face_alignment', (req, res) => res.sendFile(path.join(viewsDir, 'faceA
 app.get('/detect_and_recognize_faces', (req, res) => res.sendFile(path.join(viewsDir, 'detectAndRecognizeFaces.html')))
 app.get('/mtcnn_face_detection', (req, res) => res.sendFile(path.join(viewsDir, 'mtcnnFaceDetection.html')))
 app.get('/mtcnn_face_detection_video', (req, res) => res.sendFile(path.join(viewsDir, 'mtcnnFaceDetectionVideo.html')))
+*/
 app.get('/mtcnn_face_detection_webcam', (req, res) => res.sendFile(path.join(viewsDir, 'mtcnnFaceDetectionWebcam.html')))
 app.get('/mtcnn_face_recognition', (req, res) => res.sendFile(path.join(viewsDir, 'mtcnnFaceRecognition.html')))
+/*
 app.get('/mtcnn_face_recognition_webcam', (req, res) => res.sendFile(path.join(viewsDir, 'mtcnnFaceRecognitionWebcam.html')))
 app.get('/batch_face_landmarks', (req, res) => res.sendFile(path.join(viewsDir, 'batchFaceLandmarks.html')))
 app.get('/batch_face_recognition', (req, res) => res.sendFile(path.join(viewsDir, 'batchFaceRecognition.html')))
-
+*/
 app.post('/fetch_external_image', async (req, res) => {
   const { imageUrl } = req.body
   if (!imageUrl) {
