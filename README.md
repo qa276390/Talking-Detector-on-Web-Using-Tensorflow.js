@@ -5,7 +5,7 @@
 **JavaScript for Talking Detector in the browser implemented on top of the face-api.js API([justadudewhohacks/face-api.js](https://github.com/justadudewhohacks/face-api.js)) and tensorflow.js  API ([tensorflow/tfjs](https://github.com/tensorflow/tfjs))**
 
 
-* **[Running the Examples](#running-the-examples)**
+* **[Build and Run](#running-the-examples)**
 * **[About the Package](#about-the-package)**
   * **[Face Detection & 5 Point Face Landmarks - MTCNN](#about-face-detection-mtcnn)**
 * **[Usage](#usage)**
@@ -29,7 +29,15 @@
 
 <a name="running-the-examples"></a>
 
-## Running the Examples
+## Build and Run
+
+### Build 
+
+``` bash
+npm run-script build
+```
+
+### Run
 
 ``` bash
 cd examples
