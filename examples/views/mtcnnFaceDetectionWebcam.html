@@ -14,12 +14,12 @@
 <body>
   <div id="navbar"></div>
   <div class="center-content page-container">
-    <h3>Talking Detector</h3>
+    <img width="420" height=70 src="./images/title.png" />
     <div class="progress" id="loader">
       <div class="indeterminate"></div>
     </div>
     <div style="position: relative" class="margin">
-      <video id="inputVideo" autoplay muted></video>
+      <video onplay="preLoad(this)" id="inputVideo" autoplay muted></video>
       <canvas id="overlay" />
     </div>
     <div class="row side-by-side">    

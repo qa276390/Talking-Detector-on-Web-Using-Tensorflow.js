@@ -16,6 +16,8 @@ let model
 let label_time
 let NUM_CLASSES = 2
 let videoEl
+let LOADED = false
+var Domain = 'http://127.0.0.1:3000'
 
 const controllerDataset = new ControllerDataset(2)
 
@@ -23,10 +25,6 @@ navigator.getUserMedia = ( navigator.getUserMedia ||
                    navigator.webkitGetUserMedia ||
                    navigator.mozGetUserMedia ||
                    navigator.msGetUserMedia);
-
-
-
-
 
 async function onPlay() {
   if(videoEl.paused || videoEl.ended || !modelLoaded)
@@ -36,7 +34,7 @@ async function onPlay() {
   }
   let start_time = new Date().getTime()
   console.log('###############In################')
-  //const imgBuf = await fetchImage(uri)
+  
   const { width, height } = faceapi.getMediaDimensions(videoEl)
   const canvas = $('#overlay').get(0)
   canvas.width = width
@@ -79,8 +77,6 @@ async function onPlay() {
       predictedClass.dispose();
     }
     lmk68_time = new Date().getTime()
-
-    
     checktime = new Date().getTime()
     if(checktime-end_time>1000){
       while(!pointQ.isEmpty())
@@ -91,8 +87,7 @@ async function onPlay() {
     if(pointQ.getLength()>3){
       pointQ.dequeue()
     }
-    
-    //if(label==0)
+
     if(pointQ.getLength()!=1 && LabelSilent(pointQ))
     {
       console.log('E*************Off**************E')
@@ -109,8 +104,7 @@ async function onPlay() {
        for (i = 0; i<flen; i++)
       {
         results[i].faceDetection.box.y = results[i].faceDetection.box.y - results[i].faceDetection.box.height
-        results[i].faceDetection.box.height = results[i].faceDetection.box.height*2
-      
+        results[i].faceDetection.box.height = results[i].faceDetection.box.height*2     
       }
 
       results.forEach(({ faceDetection, faceLandmarks }) => {
@@ -126,14 +120,12 @@ async function onPlay() {
     console.log('No Detect')
     off()
   }
- 
   console.log((mtcnn_time - start_time) / 1000 + "sec");
   console.log((lmk68_time - mtcnn_time) / 1000 + "sec");
   console.log((end_time - start_time) / 1000 + "sec");
   console.log('################Out###############')
   if(stop)
     return false
-        
   setTimeout(() => onPlay(videoEl))
 }
 
@@ -180,11 +172,7 @@ async function run() {
     stream => videoEl.srcObject = stream,
     err => console.error(err)
   )
-  /*
-  let img = faceapi.createCanvasFromMedia(videoEl)
-  wcam = new Webcam(img)
-  faceapi.tf.tidy(() => mobilenet.predict(wcam.capture()));
-  */
+  
   init()
 
   $('#loader').hide()
@@ -206,6 +194,14 @@ async function run() {
   //createSelect()
   getList()
   console.log('model loaded.')
+}
+
+function preLoad(videoEl){
+  let cv = faceapi.createCanvasFromMedia(videoEl)
+  wcam = new Webcam(cv)
+  img = wcam.capture()
+  img_re= faceapi.tf.image.resizeBilinear(img, [224, 224])
+  faceapi.tf.tidy(() => mobilenet.predict(img_re));
 }
 
 $(document).ready(function() {
@@ -304,13 +300,11 @@ await faceapi.tf.nextFrame();
 isPredicting = false;
 train();
 });
-let LOADED = false
 
 document.getElementById('predict').addEventListener('click', async () => {
-
 console.log('predict!')
 if(!LOADED){
-  const saveResult = await model.save('http://127.0.0.1:3000/file_upload');
+  const saveResult = await model.save(Domain + '/file_upload');
   console.log('model saved.')
   console.log(saveResult)
   console.log(saveResult.responses[0])
@@ -325,7 +319,7 @@ onPlay()
 let count = 0
 function getList(){
     const Http = new XMLHttpRequest();
-    const url='http://127.0.0.1:3000/list_user';
+    const url = Domain + '/list_user';
     Http.open("GET", url);
     Http.send();
     let res
@@ -428,7 +422,7 @@ var index=obj.selectedIndex;
 var ModelID = obj.options[index].text;
 //ModelID = document.getElementById('model_id').value
 
-model = await faceapi.tf.loadModel('http://127.0.0.1:3000/models/'+ModelID+'/model.json','http://127.0.0.1:3000/models/'+ModelID+'/model.weights.bin');
+model = await faceapi.tf.loadModel(Domain+'/models/'+ModelID+'/model.json',Domain+'/models/'+ModelID+'/model.weights.bin');
 console.log(model.summary())
 }
 function onIncreaseMinFaceSize() {
