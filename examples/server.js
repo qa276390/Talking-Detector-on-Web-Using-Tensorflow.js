@@ -18,7 +18,7 @@ app.use(function(req, res, next) {
 var fs = require("fs")
 var multer  = require('multer')
 
-//app.use(multer({ dest: path.join(__dirname, './uploads')}).any());
+app.use(multer({ dest: path.join(__dirname, './uploads')}).any());
 app.post('/file_upload', function (req, res) {
   
   var event = new Date(Date.now());
