@@ -19,6 +19,25 @@ let videoEl
 let LOADED = false
 var Domain = 'http://127.0.0.1:3000'
 
+
+const mtcnnParams = {
+  maxNumScales: 10,
+  // scale factor used to calculate the scale steps of the image
+  // pyramid used in stage 1
+  //scaleFactor: 0.709,
+  scaleFactor: 0.709,
+  // the score threshold values used to filter the bounding
+  // boxes of stage 1, 2 and 3
+  scoreThresholds: [0.5, 0.5, 0.5],
+  // mininum face size to expect, the higher the faster processing will be,
+    // but smaller faces won't be detected
+  minFaceSize: 50
+}
+/*
+const mtcnnParams = {
+  minFaceSize
+}*/
+
 const controllerDataset = new ControllerDataset(2)
 
 navigator.getUserMedia = ( navigator.getUserMedia ||
@@ -39,11 +58,7 @@ async function onPlay() {
   const canvas = $('#overlay').get(0)
   canvas.width = width
   canvas.height = height
-      
-  const mtcnnParams = {
-    minFaceSize
-  }
-  //const { results, stats } = await faceapi.nets.mtcnn.forwardWithStats(videoEl, mtcnnParams)
+
   let img = faceapi.createCanvasFromMedia(videoEl)
   const results = await faceapi.mtcnn(img, mtcnnParams)
   console.log(results)
@@ -209,15 +224,7 @@ $(document).ready(function() {
   run()
 })
 
-function Queue(){
-  var a=[],b=0;
-  this.getLength=function(){return a.length-b};
-  this.isEmpty=function(){return 0==a.length};
-  this.enqueue=function(b){a.push(b)};
-  this.dequeue=function(){if(0!=a.length){var c=a[b];2*++b>=a.length&&(a=a.slice(b),b=0);return c}};
-  this.peek=function(){return 0<a.length?a[b]:void 0};
-  this.getitem=function(i){if(i<a.length){return a[i]}};
-}
+
 
 async function loadMobilenet() {
   const mobilenet = await faceapi.tf.loadModel(
@@ -347,10 +354,8 @@ function getList(){
           }
         }
     }
-    
     return res
 }
-// ////////////////////////////////////////
 setExampleHandler(label => {
 faceapi.tf.tidy(() => {
     addNetExample(label)
@@ -359,58 +364,54 @@ faceapi.tf.tidy(() => {
 
 async function addNetExample(label)
 {
-const { width, height } = faceapi.getMediaDimensions(videoEl)
-const canvas = $('#overlay').get(0)
-canvas.width = width
-canvas.height = height
+  const { width, height } = faceapi.getMediaDimensions(videoEl)
+  const canvas = $('#overlay').get(0)
+  canvas.width = width
+  canvas.height = height
+
+  let img = faceapi.createCanvasFromMedia(videoEl)
+  const results = await faceapi.mtcnn(img, mtcnnParams)
+  console.log(results)
+
+  if(results.length!=0){
+    locations = []
+    flen = results.length
+    for (i = 0; i<flen; i++)
+    {
+      results[i].faceDetection.box.height = results[i].faceDetection.box.height/2
+      results[i].faceDetection.box.y = results[i].faceDetection.box.y + results[i].faceDetection.box.height
+      locations.push(results[i].faceDetection)
+    }
     
-const mtcnnParams = {
-  minFaceSize
-}
+    const faceImgs = (await faceapi.extractFaces(img, locations))
 
-let img = faceapi.createCanvasFromMedia(videoEl)
-const results = await faceapi.mtcnn(img, mtcnnParams)
-console.log(results)
+    ilen = faceImgs.length
+    for(i=0;i<ilen;i++)
+    {
+      webcam = new Webcam(faceImgs[i]) 
+      IMG = webcam.capture()
+      img_resize = faceapi.tf.image.resizeBilinear(IMG, [224, 224])
+      controllerDataset.addExample(mobilenet.predict(img_resize), label)
 
-if(results.length!=0){
-  locations = []
-  flen = results.length
-  for (i = 0; i<flen; i++)
-  {
-    results[i].faceDetection.box.height = results[i].faceDetection.box.height/2
-    results[i].faceDetection.box.y = results[i].faceDetection.box.y + results[i].faceDetection.box.height
-    locations.push(results[i].faceDetection)
+      drawThumb(img_resize, label);
+    }
+
+    for (i = 0; i<flen; i++)
+    {
+      results[i].faceDetection.box.y = results[i].faceDetection.box.y - results[i].faceDetection.box.height
+      results[i].faceDetection.box.height = results[i].faceDetection.box.height*2
+    }
+
+    results.forEach(({ faceDetection, faceLandmarks }) => {
+    if (faceDetection.score < minConfidence) {
+      return
+    }
+    faceapi.drawDetection('overlay', faceDetection.forSize(width, height))
+    })
+
+  }else{
+    setTimeout(() => addNetExample(label))
   }
-  
-  const faceImgs = (await faceapi.extractFaces(img, locations))
-
-  ilen = faceImgs.length
-  for(i=0;i<ilen;i++)
-  {
-    webcam = new Webcam(faceImgs[i]) 
-    IMG = webcam.capture()
-    img_resize = faceapi.tf.image.resizeBilinear(IMG, [224, 224])
-    controllerDataset.addExample(mobilenet.predict(img_resize), label)
-
-    drawThumb(img_resize, label);
-  }
-
-  for (i = 0; i<flen; i++)
-  {
-    results[i].faceDetection.box.y = results[i].faceDetection.box.y - results[i].faceDetection.box.height
-    results[i].faceDetection.box.height = results[i].faceDetection.box.height*2
-  }
-
-  results.forEach(({ faceDetection, faceLandmarks }) => {
-  if (faceDetection.score < minConfidence) {
-    return
-  }
-  faceapi.drawDetection('overlay', faceDetection.forSize(width, height))
-  })
-
-}else{
-  setTimeout(() => addNetExample(label))
-}
 }
 
 //button
@@ -435,35 +436,3 @@ minFaceSize = Math.max(faceapi.round(minFaceSize - 50), 50)
 $('#minFaceSize').val(minFaceSize)
 }
 
-function onIncreaseThreshold() {
-Enthr= Math.min((Enthr + 0.1), 5)
-//let textT = Math.round(Enthr*100) + '%'
-let textT = Math.round(Enthr*100)/100
-$('#Threshold').val(textT)
-}
-
-function onDecreaseThreshold() {
-Enthr= Math.max((Enthr - 0.1), 0.0)
-//let textT = Math.round(Enthr*100) + '%'
-let textT = Math.round(Enthr*100)/100
-$('#Threshold').val(textT)
-}
-function onIncreaseuthr() {
-uthr= Math.min((uthr + 0.001), 3)
-//let textT = Math.round(Enthr*100) + '%'
-let textT = Math.round(uthr*1000)/1000
-$('#uthr').val(textT)
-}
-
-function onDecreaseuthr() {
-uthr= Math.max((uthr - 0.001), 0.0)
-//let textT = Math.round(Enthr*100) + '%'
-let textT = Math.round(uthr*1000)/1000
-$('#uthr').val(textT)
-}
-function updateTimeStats(timeInMs) {
-forwardTimes = [timeInMs].concat(forwardTimes).slice(0, 30)
-const avgTimeInMs = forwardTimes.reduce((total, t) => total + t) / forwardTimes.length
-$('#time').val(`${Math.round(avgTimeInMs)} ms`)
-$('#fps').val(`${faceapi.round(1000 / avgTimeInMs)}`)
-}
